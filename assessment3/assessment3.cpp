@@ -13,7 +13,6 @@
 #include "FlyThroughCamera.h"
 #include "shader.h"
 #include "window.h"
-//#include "skybox.h"
 #include "shapes.h"
 
 using namespace std;
@@ -33,10 +32,104 @@ bool firstMouse = true;
 float prevMouseX;
 float prevMouseY;
 
+// hard coded shapes
+
+float vertices[] =
+{
+	//pos					//col			
+	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+
+	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+
+	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+
+	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
+	0.5f, -0.5f, -0.5f, 	1.f, 1.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+
+	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+
+	-0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
+	0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
+	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+	-0.5f,  0.5f, -0.5f, 	0.0f, 1.f, 1.0f,
+};
+
+float skyboxVertices[] = {
+	// positions          
+	-1.0f,  1.0f, -1.0f,
+	-1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f, -1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+
+	-1.0f, -1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f,
+	-1.0f, -1.0f,  1.0f,
+
+	-1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f, -1.0f,
+	 1.0f,  1.0f,  1.0f,
+	 1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f,  1.0f,
+	-1.0f,  1.0f, -1.0f,
+
+	-1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f, -1.0f,
+	 1.0f, -1.0f, -1.0f,
+	-1.0f, -1.0f,  1.0f,
+	 1.0f, -1.0f,  1.0f
+};
+
+
 int main(int argc, char** argv)
 {
 	// create window
-	GLFWwindow* window = myCreateWindow(window_width, window_height, "Fly Through Camera");
+	GLFWwindow* window = myCreateWindow(window_width, window_height, "Space Scene");
 
 	// disable mouse and set mouse event callback to processMourse function
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -46,13 +139,13 @@ int main(int argc, char** argv)
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 	// load shaders
-	unsigned int cubeShaderProgram = LoadShader("mvp.vert", "col.frag");
+	unsigned int circleShaderProgram = LoadShader("circle.vert", "circle.frag");
+	unsigned int cubeShaderProgram = LoadShader("cube.vert", "cube.frag");
 	unsigned int skyShaderProgram = LoadShader("sky.vert", "sky.frag");
 	
 	// init camera
 	InitCamera(Camera);
 
-	// load skybox textures
 	const char* files[6] = {
 		"skybox/right.jpg",
 		"skybox/left.jpg",
@@ -63,6 +156,25 @@ int main(int argc, char** argv)
 	};
 	GLuint cubemapTexture = loadCubemap(files);
 	
+	// get vertices
+	int segments_every_ninety = 10; // 90 degree segment count
+	int total_circle_segments = segments_every_ninety * 4; // 360 degree segment count
+	int total_circle_vertices = total_circle_segments * 3; // number of vertices to form triangles
+	int circleArraySize = 0;
+	float* circle2d = getMyCircle(total_circle_segments, 0.5, &circleArraySize);
+
+
+	// circle
+	unsigned int circleVAO, circleVBO;
+	glGenVertexArrays(1, &circleVAO);
+	glGenBuffers(1, &circleVBO);
+
+	glBindVertexArray(circleVAO);
+	glBindBuffer(GL_ARRAY_BUFFER, circleVBO);
+	glBufferData(GL_ARRAY_BUFFER, circleArraySize, circle2d, GL_STATIC_DRAW);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(0);
+
 	// cube
 	unsigned int cubeVAO, cubeVBO;
 	glGenVertexArrays(1, &cubeVAO);
@@ -76,7 +188,7 @@ int main(int argc, char** argv)
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 	glEnableVertexAttribArray(1);
 
-	// sky
+	// skybox
 	unsigned int skyVAO, skyVBO;
 
 	glGenVertexArrays(1, &skyVAO);
@@ -112,21 +224,37 @@ int main(int argc, char** argv)
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 		//glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
 
+		// view and perspective
+		glm::mat4 model = glm::mat4(1.f);
+		glm::mat4 view = glm::mat4(1.f);
+		glm::mat4 projection = glm::mat4(1.f);
+		view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
+		projection = glm::perspective(glm::radians(Camera.FOV), (float)window_width / (float)window_height, 1.f, 10.f);
+
+		// circle
+		glUseProgram(circleShaderProgram);
+
+		glm::vec3 circle_pos = glm::vec3(0.0f, 0.0f, 2.f);
+		model = glm::mat4(1.f);
+		model = glm::translate(model, circle_pos);
+
+		glUniformMatrix4fv(glGetUniformLocation(circleShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(circleShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(circleShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		glBindVertexArray(circleVAO);
+		glDrawArrays(GL_TRIANGLES, 0, total_circle_vertices);
+		glBindVertexArray(0);
+
 		// models
 		glUseProgram(cubeShaderProgram);
 		
 		glm::vec3 cube_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-
-		glm::mat4 model = glm::mat4(1.f);
+		model = glm::mat4(1.f);
 		model = glm::translate(model, cube_pos);
+
 		glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-
-		glm::mat4 view = glm::mat4(1.f);
-		view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
 		glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-
-		glm::mat4 projection = glm::mat4(1.f);
-		projection = glm::perspective(glm::radians(Camera.FOV), (float)window_width / (float)window_height, 1.f, 10.f);
 		glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 		glBindVertexArray(cubeVAO);
@@ -153,8 +281,10 @@ int main(int argc, char** argv)
 	}
 
 	// optional clean up
+	glDeleteVertexArrays(1, &circleVAO);
 	glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteVertexArrays(1, &skyVAO);
+	glDeleteBuffers(1, &circleVBO);
 	glDeleteBuffers(1, &cubeVBO);
 	glDeleteBuffers(1, &skyVBO);
 

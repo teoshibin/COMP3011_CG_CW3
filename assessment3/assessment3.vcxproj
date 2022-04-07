@@ -153,10 +153,13 @@
   <ItemGroup>
     <ClCompile Include="assessment3.cpp" />
     <ClCompile Include="libraries\include\glad\glad.c" />
+    <ClCompile Include="shapes.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="col.frag" />
-    <None Include="mvp.vert" />
+    <None Include="circle.frag" />
+    <None Include="circle.vert" />
+    <None Include="cube.frag" />
+    <None Include="cube.vert" />
     <None Include="sky.frag" />
     <None Include="sky.vert" />
   </ItemGroup>
@@ -167,7 +170,6 @@
     <ClInclude Include="ModelViewerCamera.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="shapes.h" />
-    <ClInclude Include="skybox.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="texture.h" />
     <ClInclude Include="util.h" />

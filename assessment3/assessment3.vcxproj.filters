@@ -21,18 +21,27 @@
     <ClCompile Include="libraries\include\glad\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="shapes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="col.frag">
+    <None Include="cube.frag">
       <Filter>Source Files</Filter>
     </None>
-    <None Include="mvp.vert">
+    <None Include="cube.vert">
       <Filter>Source Files</Filter>
     </None>
     <None Include="sky.vert">
       <Filter>Source Files</Filter>
     </None>
     <None Include="sky.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="circle.frag">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="circle.vert">
       <Filter>Source Files</Filter>
     </None>
   </ItemGroup>
@@ -59,9 +68,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="skybox.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="shapes.h">
