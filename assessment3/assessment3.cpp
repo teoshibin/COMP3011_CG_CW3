@@ -1,19 +1,26 @@
+// openGL and window libraries
 #include <glad/glad.h> 
 #include <GLFW/glfw3.h>
-
 #include <glm/glm/glm.hpp>
 #include <glm/glm/gtc/matrix_transform.hpp>
 #include <glm/glm/gtc/type_ptr.hpp>
+
+// build in libraries
+#include <iostream>
+#include <vector>
+
+// helper libraries
+// load image
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
-#include <iostream>
-
+// custom functions
 #include "camera.h"
 #include "FlyThroughCamera.h"
 #include "shader.h"
 #include "window.h"
 #include "shapes.h"
+#include "readModelCSV.h"
 
 using namespace std;
 
@@ -33,52 +40,6 @@ float prevMouseX;
 float prevMouseY;
 
 // hard coded shapes
-
-float vertices[] =
-{
-	//pos					//col			
-	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-
-	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-
-	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-
-	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
-	0.5f, -0.5f, -0.5f, 	1.f, 1.0f, 0.0f,
-	0.5f, -0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
-	0.5f, -0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-
-	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-
-	-0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
-	0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
-	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-	-0.5f,  0.5f, -0.5f, 	0.0f, 1.f, 1.0f,
-};
 
 float skyboxVertices[] = {
 	// positions          
@@ -125,11 +86,59 @@ float skyboxVertices[] = {
 	 1.0f, -1.0f,  1.0f
 };
 
+std::vector<float> vertices = {
+	//pos					//col			
+	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	-0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+
+	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	-0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+
+	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f,  0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+
+	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+	0.5f,  0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
+	0.5f, -0.5f, -0.5f, 	1.f, 1.0f, 0.0f,
+	0.5f, -0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
+	0.5f, -0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+
+	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+	-0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+
+	-0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
+	0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
+	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+	-0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+	-0.5f,  0.5f, -0.5f, 	0.0f, 1.f, 1.0f,
+};
+
 
 int main(int argc, char** argv)
 {
 	// create window
 	GLFWwindow* window = myCreateWindow(window_width, window_height, "Space Scene");
+
+	// adjust window position
+	mySetWindowCenter(window);
 
 	// disable mouse and set mouse event callback to processMourse function
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
@@ -160,9 +169,13 @@ int main(int argc, char** argv)
 	int segments_every_ninety = 10; // 90 degree segment count
 	int total_circle_segments = segments_every_ninety * 4; // 360 degree segment count
 	int total_circle_vertices = total_circle_segments * 3; // number of vertices to form triangles
-	int circleArraySize = 0;
-	float* circle2d = getMyCircle(total_circle_segments, 0.5, &circleArraySize);
+	vector<float> circle2d = getVectorCircle(total_circle_segments, 0.5);
 
+	vector<float> sphere_vertices = readVerticesCSV("myObjects/earth_vertices.csv");
+	vector<unsigned int> sphere_indices = readIndicesCSV("myObjects/earth_indices.csv");
+	
+	cout << sphere_vertices.size() / 5 << endl;
+	cout << sphere_indices.size() / 3 << endl;
 
 	// circle
 	unsigned int circleVAO, circleVBO;
@@ -171,7 +184,7 @@ int main(int argc, char** argv)
 
 	glBindVertexArray(circleVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, circleVBO);
-	glBufferData(GL_ARRAY_BUFFER, circleArraySize, circle2d, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * circle2d.size(), &circle2d[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 
@@ -182,7 +195,7 @@ int main(int argc, char** argv)
 
 	glBindVertexArray(cubeVAO);
 	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
