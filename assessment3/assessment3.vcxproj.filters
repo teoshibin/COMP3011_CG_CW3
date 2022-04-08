@@ -47,6 +47,12 @@
     <None Include="circle.vert">
       <Filter>Source Files</Filter>
     </None>
+    <None Include="sphere.vert">
+      <Filter>Source Files</Filter>
+    </None>
+    <None Include="sphere.frag">
+      <Filter>Source Files</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">

@@ -163,6 +163,8 @@
     <None Include="cube.vert" />
     <None Include="sky.frag" />
     <None Include="sky.vert" />
+    <None Include="sphere.frag" />
+    <None Include="sphere.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmap.h" />

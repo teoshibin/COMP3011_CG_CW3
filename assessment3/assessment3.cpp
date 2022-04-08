@@ -28,6 +28,7 @@ using namespace std;
 void processKeyboard(GLFWwindow* window);
 void processMouse(GLFWwindow* window, double x, double y);
 unsigned int loadCubemap(const char* filename[6]);
+unsigned int loadTexture(const char* filename, int stbi_enum);
 
 // settings
 int window_width = 1280;
@@ -148,13 +149,15 @@ int main(int argc, char** argv)
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
 	// load shaders
-	unsigned int circleShaderProgram = LoadShader("circle.vert", "circle.frag");
+	//unsigned int circleShaderProgram = LoadShader("circle.vert", "circle.frag");
+	unsigned int sphereShaderProgram = LoadShader("sphere.vert", "sphere.frag");
 	unsigned int cubeShaderProgram = LoadShader("cube.vert", "cube.frag");
 	unsigned int skyShaderProgram = LoadShader("sky.vert", "sky.frag");
 	
 	// init camera
 	InitCamera(Camera);
 
+	// load all textures
 	const char* files[6] = {
 		"skybox/right.jpg",
 		"skybox/left.jpg",
@@ -164,52 +167,52 @@ int main(int argc, char** argv)
 		"skybox/back.jpg"
 	};
 	GLuint cubemapTexture = loadCubemap(files);
+	GLuint earthTexture = loadTexture("myObjects/earth.png", STBI_rgb_alpha);
+
+	// sphere
+	vector<float> sphere_vertices = readVerticesCSV("myObjects/sphere_vertices.csv");
+	vector<unsigned int> sphere_indices = readIndicesCSV("myObjects/sphere_indices.csv");
 	
-	// get vertices
-	int segments_every_ninety = 10; // 90 degree segment count
-	int total_circle_segments = segments_every_ninety * 4; // 360 degree segment count
-	int total_circle_vertices = total_circle_segments * 3; // number of vertices to form triangles
-	vector<float> circle2d = getVectorCircle(total_circle_segments, 0.5);
+	unsigned int sphereVAO, sphereVBO, sphereIBO;
+	glGenVertexArrays(1, &sphereVAO);
+	glBindVertexArray(sphereVAO);
 
-	vector<float> sphere_vertices = readVerticesCSV("myObjects/earth_vertices.csv");
-	vector<unsigned int> sphere_indices = readIndicesCSV("myObjects/earth_indices.csv");
+	glGenBuffers(1, &sphereVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
+	glBufferData(GL_ARRAY_BUFFER, sphere_vertices.size() * sizeof(float), &sphere_vertices[0], GL_STATIC_DRAW);
 	
-	cout << sphere_vertices.size() / 5 << endl;
-	cout << sphere_indices.size() / 3 << endl;
-
-	// circle
-	unsigned int circleVAO, circleVBO;
-	glGenVertexArrays(1, &circleVAO);
-	glGenBuffers(1, &circleVBO);
-
-	glBindVertexArray(circleVAO);
-	glBindBuffer(GL_ARRAY_BUFFER, circleVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(float) * circle2d.size(), &circle2d[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glGenBuffers(1, &sphereIBO);
+	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphere_indices.size() * sizeof(unsigned int), &sphere_indices[0], GL_STATIC_DRAW);
 
 	// cube
 	unsigned int cubeVAO, cubeVBO;
 	glGenVertexArrays(1, &cubeVAO);
-	glGenBuffers(1, &cubeVBO);
-
 	glBindVertexArray(cubeVAO);
+
+	glGenBuffers(1, &cubeVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
 	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	// skybox
 	unsigned int skyVAO, skyVBO;
-
 	glGenVertexArrays(1, &skyVAO);
-	glGenBuffers(1, &skyVBO);
-
 	glBindVertexArray(skyVAO);
+
+	glGenBuffers(1, &skyVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, skyVBO);
 	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
 
@@ -242,24 +245,28 @@ int main(int argc, char** argv)
 		glm::mat4 view = glm::mat4(1.f);
 		glm::mat4 projection = glm::mat4(1.f);
 		view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
-		projection = glm::perspective(glm::radians(Camera.FOV), (float)window_width / (float)window_height, 1.f, 10.f);
+		projection = glm::perspective(glm::radians(Camera.FOV), (float)window_width / (float)window_height, 0.5f, 20.f);
 
-		// circle
-		glUseProgram(circleShaderProgram);
+		// sphere - earth
+		glUseProgram(sphereShaderProgram);
 
-		glm::vec3 circle_pos = glm::vec3(0.0f, 0.0f, 2.f);
+		glm::vec3 sphere_pos = glm::vec3(0.0f, 3.0f, 0.0f);
 		model = glm::mat4(1.f);
-		model = glm::translate(model, circle_pos);
+		model = glm::rotate(model, glm::radians(23.5f), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::translate(model, sphere_pos);
 
-		glUniformMatrix4fv(glGetUniformLocation(circleShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(circleShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(circleShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-		glBindVertexArray(circleVAO);
-		glDrawArrays(GL_TRIANGLES, 0, total_circle_vertices);
+		/*glActiveTexture(GL_TEXTURE0);*/
+		glBindTexture(GL_TEXTURE_2D, earthTexture);
+		glBindVertexArray(sphereVAO);
+		glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
 
-		// models
+		// cube
 		glUseProgram(cubeShaderProgram);
 		
 		glm::vec3 cube_pos = glm::vec3(0.0f, 0.0f, 0.0f);
@@ -294,12 +301,15 @@ int main(int argc, char** argv)
 	}
 
 	// optional clean up
-	glDeleteVertexArrays(1, &circleVAO);
+	glDeleteVertexArrays(1, &sphereVAO);
 	glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteVertexArrays(1, &skyVAO);
-	glDeleteBuffers(1, &circleVBO);
+
+	glDeleteBuffers(1, &sphereVBO);
 	glDeleteBuffers(1, &cubeVBO);
 	glDeleteBuffers(1, &skyVBO);
+
+	glDeleteBuffers(1, &sphereIBO);
 
 	glfwTerminate();
 	return 0;
@@ -339,6 +349,53 @@ void processMouse(GLFWwindow* window, double x, double y)
 	OrientCamera(Camera, dX, dY);
 }
 
+
+// load a texture with a filename
+// 
+// STBI_default = 0,
+// STBI_grey = 1,
+// STBI_grey_alpha = 2,
+// STBI_rgb = 3,
+// STBI_rgb_alpha = 4};
+unsigned int loadTexture(const char* filename, int stbi_enum)
+{
+	GLuint textureID;
+	glGenTextures(1, &textureID);
+	glBindTexture(GL_TEXTURE_2D, textureID);
+
+	int width, height, nrChannels;
+	stbi_set_flip_vertically_on_load(true);
+	unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, stbi_enum);
+
+	if (data)
+	{
+		
+		// if it contain alpha value
+		if (stbi_enum == STBI_rgb_alpha || stbi_enum == STBI_grey_alpha) 
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+		}
+		else
+		{
+			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+		}		
+	}
+	else
+	{
+		std::cout << "Cubemap texture failed to load at path: " << filename << std::endl;
+	}
+	stbi_image_free(data);
+
+	glGenerateMipmap(GL_TEXTURE_2D);
+
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+	return textureID;
+}
+
 unsigned int loadCubemap(const char* faces[6])
 {
 	unsigned int textureID;
@@ -348,7 +405,7 @@ unsigned int loadCubemap(const char* faces[6])
 	int width, height, nrChannels;
 	for (unsigned int i = 0; i < 6; i++)
 	{
-		unsigned char* data = stbi_load(faces[i], &width, &height, &nrChannels, 0);
+		unsigned char* data = stbi_load(faces[i], &width, &height, &nrChannels, STBI_default);
 		if (data)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);

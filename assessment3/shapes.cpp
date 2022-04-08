@@ -77,12 +77,3 @@ std::vector<float> getVectorCircle(int num_segments, float radius)
 
 	return circle;
 }
-
-std::vector<float> getVectorIcoSphere()
-{
-	std::vector<float> sphere
-	{
-		1,2,3
-	};
-	return sphere;
-}
