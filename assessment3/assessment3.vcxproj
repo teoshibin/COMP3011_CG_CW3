@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="assessment3.cpp" />
+    <ClCompile Include="geoMetrics.cpp" />
     <ClCompile Include="libraries\include\glad\glad.c" />
     <ClCompile Include="readModelCSV.cpp" />
     <ClCompile Include="shapes.cpp" />
