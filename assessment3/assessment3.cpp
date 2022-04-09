@@ -123,6 +123,7 @@ int main(int argc, char** argv)
 	};
 	GLuint cubemapTexture = loadCubemap(files);
 	GLuint earthTexture = loadTexture("myObjects/earth.png", STBI_rgb_alpha);
+	GLuint moonTexture = loadTexture("myObjects/moon.png", STBI_rgb_alpha);
 	GLuint sunTexture = loadTexture("myObjects/sun.png", STBI_rgb_alpha);
 
 	// sphere
@@ -140,7 +141,7 @@ int main(int argc, char** argv)
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	glGenBuffers(1, &sphereIBO);
 	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
@@ -181,14 +182,24 @@ int main(int argc, char** argv)
 	// model constants
 	float sun_scale = s.sun.radius / s.earth.radius * earth_scale * sun_scale_modifier;
 	float earth_to_sun_distance = sun_scale * distance_modifier; // using diameter of the sun
-	
+	float moon_scale = s.moon.radius / s.earth.radius * earth_scale;
+	float moon_to_earth_distance = earth_scale * distance_modifier;
+
 	// animation hyper params
 	int precision = 2;
-	float earth_orbit_time_span = 240; // time for completing earth orbit animation in seconds
+	float earth_orbit_time_span = 600; // time for completing earth orbit animation in seconds
 
-	// animation object
+	// animation constants and objects
+
+	// calculate moon time span using ratio (moon_tp / earth_tp) = (moon_orbital_earth_days / orbital_earth_days)
+	float moon_orbit_time_span = earth_orbit_time_span / s.earth.orbital_period * s.moon.earth_days_orbital_period;
+	
 	SphereAnimator earthOrbitor = SphereAnimator(
 		earth_orbit_time_span, s.earth.orbital_period, 1.5f, earth_to_sun_distance, s.earth.ecliptic_inclination);
+	// note that the orbital period unit we're using here is the moon day not earth day
+	// moon got the same rotation and orbit period so the same side will always be facing earth
+	SphereAnimator moonOrbitor = SphereAnimator(
+		moon_orbit_time_span, s.moon.moon_days_orbital_period, 1.1f, moon_to_earth_distance, s.moon.ecliptic_inclination);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -199,6 +210,8 @@ int main(int argc, char** argv)
 		// earth animation calculation
 		earthOrbitor.animate(ms_time, precision, precision);
 		vector<float> earth_vector_pos = earthOrbitor.getOrbitPosition();		
+		moonOrbitor.animate(ms_time, precision, precision);
+		vector<float> moon_vector_pos = moonOrbitor.getOrbitPosition();
 
 		// input
 		processKeyboard(window);
@@ -214,7 +227,6 @@ int main(int argc, char** argv)
 		glm::mat4 projection = glm::mat4(1.f);
 		view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
 		projection = glm::perspective(glm::radians(Camera.FOV), (float)window_width / (float)window_height, 0.1f, 100.f);
-
 
 		// sphere - earth
 		glUseProgram(sphereShaderProgram);				
@@ -236,6 +248,26 @@ int main(int argc, char** argv)
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
 
+		// sphere - moon
+		glUseProgram(sphereShaderProgram);
+
+		glm::vec3 moon_pos = glm::vec3(moon_vector_pos[0], moon_vector_pos[1], moon_vector_pos[2]);
+		model = glm::mat4(1.f);
+		model = glm::translate(model, moon_pos);
+		model = glm::translate(model, earth_pos);
+		model = glm::rotate(model, glm::radians(s.moon.axial_tilt), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::rotate(model, glm::radians(moonOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::scale(model, glm::vec3(moon_scale));
+
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		glBindTexture(GL_TEXTURE_2D, moonTexture);
+		glBindVertexArray(sphereVAO);
+		glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindVertexArray(0);
 
 		// sphere - sun
 		glUseProgram(sphereShaderProgram);

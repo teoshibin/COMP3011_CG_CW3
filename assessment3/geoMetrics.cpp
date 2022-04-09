@@ -82,7 +82,7 @@ void SphereAnimator::updateOrbit(float current_ms_time, unsigned int precision)
 	if (stepped)
 	{
 		float x = sin(DEG2RAD(orbit_angle)) * orbit_radius * oval_ratio;
-		float y = sin(DEG2RAD(orbit_tilt)) * orbit_radius;
+		float y = tan(DEG2RAD(orbit_tilt)) * x;
 		float z = cos(DEG2RAD(orbit_angle)) * orbit_radius;
 		setOrbitPosition(x, y, z);
 	}

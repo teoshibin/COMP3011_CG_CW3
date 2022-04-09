@@ -11,9 +11,20 @@ struct Earth
 	const float radius = 6371.f; // km
 	const float axial_tilt = 23.4392811f; // degree
 	const float orbital_period = 365.256363004f; // days
-	const float orbital_speed_kmPs = 29.78f; // km/s
 	const float ecliptic_inclination = 0.f; // degree
 	const float distance_to_sun = 149.6e+6f; // million km
+};
+
+struct Moon
+{
+	const float radius = 1737.4;
+	const float axial_tilt = 1.5424f;
+	const float moon_days_orbital_period = 1.f;
+	const float earth_days_orbital_period = 27.321661f;
+	const float ecliptic_inclination = 5.145f;
+	const float distance_to_earth = 384400.f;
+	const float apoapsis = 405400.f; // further distance to earth
+	const float periapsis = 362600.f; // closest distance to earth
 };
 
 struct Sun
@@ -26,6 +37,7 @@ struct SolarSystem
 {
 	struct Earth earth;
 	struct Sun sun;
+	struct Moon moon;
 };
 
 class SphereAnimator
@@ -96,7 +108,7 @@ private:
 
 	// configs for calculating following parameters
 	float orbital_delay = 600.f;			// time in seconds to complete a full 360 degrees orbit
-	float orbital_days = 1.f;				// total days to orbit the sun 360 degrees
+	float orbital_days = 1.f;				// total number of spins for every full orbit (animated object's day cycle, not earth's)
 
 	// delays
 	float delay_per_orbit_angle = orbital_delay / 360;	// delay for every orbit angle change in seconds
