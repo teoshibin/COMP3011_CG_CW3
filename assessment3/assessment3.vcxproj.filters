@@ -88,5 +88,8 @@
     <ClInclude Include="readModelCSV.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="geoMetrics.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

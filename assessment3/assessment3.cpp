@@ -19,8 +19,9 @@
 #include "FlyThroughCamera.h"
 #include "shader.h"
 #include "window.h"
-#include "shapes.h"
+//#include "shapes.h"
 #include "readModelCSV.h"
+#include "geoMetrics.h"
 
 using namespace std;
 
@@ -87,50 +88,50 @@ float skyboxVertices[] = {
 	 1.0f, -1.0f,  1.0f
 };
 
-std::vector<float> vertices = {
-	//pos					//col			
-	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	-0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-
-	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	-0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-
-	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-
-	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-	0.5f,  0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
-	0.5f, -0.5f, -0.5f, 	1.f, 1.0f, 0.0f,
-	0.5f, -0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
-	0.5f, -0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-
-	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-	-0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-
-	-0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
-	0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
-	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-	-0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-	-0.5f,  0.5f, -0.5f, 	0.0f, 1.f, 1.0f,
-};
+//std::vector<float> vertices = {
+//	//pos					//col			
+//	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+//	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+//	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+//	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+//	-0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+//	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
+//
+//	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+//	0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+//	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+//	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+//	-0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+//	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
+//
+//	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+//	-0.5f,  0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+//	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+//	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
+//	-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+//	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
+//
+//	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+//	0.5f,  0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
+//	0.5f, -0.5f, -0.5f, 	1.f, 1.0f, 0.0f,
+//	0.5f, -0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
+//	0.5f, -0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+//	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
+//
+//	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+//	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+//	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+//	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+//	-0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
+//	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
+//
+//	-0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
+//	0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
+//	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+//	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+//	-0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
+//	-0.5f,  0.5f, -0.5f, 	0.0f, 1.f, 1.0f,
+//};
 
 
 int main(int argc, char** argv)
@@ -168,6 +169,7 @@ int main(int argc, char** argv)
 	};
 	GLuint cubemapTexture = loadCubemap(files);
 	GLuint earthTexture = loadTexture("myObjects/earth.png", STBI_rgb_alpha);
+	GLuint sunTexture = loadTexture("myObjects/sun.png", STBI_rgb_alpha);
 
 	// sphere
 	vector<float> sphere_vertices = readVerticesCSV("myObjects/sphere_vertices.csv");
@@ -191,18 +193,18 @@ int main(int argc, char** argv)
 	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphere_indices.size() * sizeof(unsigned int), &sphere_indices[0], GL_STATIC_DRAW);
 
 	// cube
-	unsigned int cubeVAO, cubeVBO;
-	glGenVertexArrays(1, &cubeVAO);
-	glBindVertexArray(cubeVAO);
+	//unsigned int cubeVAO, cubeVBO;
+	//glGenVertexArrays(1, &cubeVAO);
+	//glBindVertexArray(cubeVAO);
 
-	glGenBuffers(1, &cubeVBO);
-	glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-	glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
+	//glGenBuffers(1, &cubeVBO);
+	//glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+	//glBufferData(GL_ARRAY_BUFFER, vertices.size() * sizeof(float), &vertices[0], GL_STATIC_DRAW);
 
-	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
-	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)0);
+	//glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(float), (void*)(3 * sizeof(float)));
 
 	// skybox
 	unsigned int skyVAO, skyVBO;
@@ -228,9 +230,46 @@ int main(int argc, char** argv)
 	glUseProgram(skyShaderProgram);
 	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // idk
 
+	SolarSystem solarSys;
+
+	// model hyper params
+	float earth_scale = 0.3; // make earth smaller
+	float sun_scale_modifier = 0.05; // make sun smaller (not to actual scale)
+	float distance_modifier = 7; // (not to actual scale)
+
+	// model constants
+	float sun_scale = solarSys.sun.radius / solarSys.earth.radius * earth_scale * sun_scale_modifier;
+	float earth_to_sun_distance = sun_scale * distance_modifier;
+	
+	// animation hyper params
+	int precision = 2;
+	float earth_orbit_time_span = 240; // time for completing earth orbit animation in seconds
+	
+	// animation constants
+	float earth_delay_per_day = earth_orbit_time_span / solarSys.earth.orbital_period;
+	float earth_delay_per_orbit_angle = earth_orbit_time_span / 360;
+	float earth_delay_per_spin_angle = earth_delay_per_day / 360;
+	float earth_orbit_major_axis_ratio = 1.5;
+	
+	// animation variables
+	float earth_spin_angle = 0;
+	float earth_spin_timer = 0;
+	float earth_orbit_angle = 0;
+	float earth_orbit_timer = 0;
+	float earth_orbit_posX = earth_to_sun_distance;
+	float earth_orbit_posY = 0;
+
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
+
+		// animations calculations
+		float ms_time = (float) glfwGetTime() * 1000;
+		// earth animation calculation
+		earthOrbitAngle(ms_time, &earth_orbit_timer, earth_delay_per_orbit_angle, precision, earth_to_sun_distance,
+			earth_orbit_major_axis_ratio, &earth_orbit_angle, &earth_orbit_posX, &earth_orbit_posY);
+		earthSpinAngle(ms_time, &earth_spin_timer, &earth_spin_angle, earth_delay_per_spin_angle, precision);
+		
 
 		// input
 		processKeyboard(window);
@@ -245,41 +284,65 @@ int main(int argc, char** argv)
 		glm::mat4 view = glm::mat4(1.f);
 		glm::mat4 projection = glm::mat4(1.f);
 		view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
-		projection = glm::perspective(glm::radians(Camera.FOV), (float)window_width / (float)window_height, 0.5f, 20.f);
+		projection = glm::perspective(glm::radians(Camera.FOV), (float)window_width / (float)window_height, 0.1f, 100.f);
+
 
 		// sphere - earth
-		glUseProgram(sphereShaderProgram);
+		glUseProgram(sphereShaderProgram);				
 
-		glm::vec3 sphere_pos = glm::vec3(0.0f, 3.0f, 0.0f);
+		glm::vec3 earth_pos = glm::vec3(earth_orbit_posX, 0.0f, earth_orbit_posY);
 		model = glm::mat4(1.f);
-		model = glm::rotate(model, glm::radians(23.5f), glm::vec3(0.f, 0.f, 1.f));
-		model = glm::translate(model, sphere_pos);
+		model = glm::translate(model, earth_pos);
+		model = glm::rotate(model, glm::radians(solarSys.earth.axial_tilt), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::rotate(model, glm::radians(earth_spin_angle), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::scale(model, glm::vec3(earth_scale));
 
 		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
 		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
 		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-		/*glActiveTexture(GL_TEXTURE0);*/
 		glBindTexture(GL_TEXTURE_2D, earthTexture);
 		glBindVertexArray(sphereVAO);
 		glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
 
-		// cube
-		glUseProgram(cubeShaderProgram);
-		
-		glm::vec3 cube_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+		// sphere - sun
+		glUseProgram(sphereShaderProgram);
+
+		glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 		model = glm::mat4(1.f);
-		model = glm::translate(model, cube_pos);
+		model = glm::translate(model, sun_pos);
+		model = glm::rotate(model, glm::radians(solarSys.sun.axial_tilt), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::scale(model, glm::vec3(sun_scale));
 
-		glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-		glBindVertexArray(cubeVAO);
-		glDrawArrays(GL_TRIANGLES, 0, 36);
+		glBindTexture(GL_TEXTURE_2D, sunTexture);
+		glBindVertexArray(sphereVAO);
+		glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
+
+
+		//// cube
+		//glUseProgram(cubeShaderProgram);
+		//
+		//glm::vec3 cube_pos = glm::vec3(5.0f, 0.0f, 0.0f);
+		//model = glm::mat4(1.f);
+		//model = glm::translate(model, cube_pos);
+
+		//glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		//glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		//glUniformMatrix4fv(glGetUniformLocation(cubeShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		//glBindVertexArray(cubeVAO);
+		//glDrawArrays(GL_TRIANGLES, 0, 36);
+		//glBindVertexArray(0);
+
 
 		// skybox
 		glDepthFunc(GL_LEQUAL);
@@ -295,6 +358,7 @@ int main(int argc, char** argv)
 		glBindVertexArray(0);
 		glDepthFunc(GL_LESS); // set depth function back to default
 
+
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
@@ -302,11 +366,11 @@ int main(int argc, char** argv)
 
 	// optional clean up
 	glDeleteVertexArrays(1, &sphereVAO);
-	glDeleteVertexArrays(1, &cubeVAO);
+	//glDeleteVertexArrays(1, &cubeVAO);
 	glDeleteVertexArrays(1, &skyVAO);
 
 	glDeleteBuffers(1, &sphereVBO);
-	glDeleteBuffers(1, &cubeVBO);
+	//glDeleteBuffers(1, &cubeVBO);
 	glDeleteBuffers(1, &skyVBO);
 
 	glDeleteBuffers(1, &sphereIBO);
