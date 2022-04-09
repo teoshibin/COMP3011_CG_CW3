@@ -88,52 +88,6 @@ float skyboxVertices[] = {
 	 1.0f, -1.0f,  1.0f
 };
 
-//std::vector<float> vertices = {
-//	//pos					//col			
-//	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-//	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-//	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-//	0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-//	-0.5f,  0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-//	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 0.0f,
-//
-//	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-//	0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-//	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-//	0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-//	-0.5f,  0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-//	-0.5f, -0.5f,  0.5f,  	0.0f, 1.0f, 0.0f,
-//
-//	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-//	-0.5f,  0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-//	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-//	-0.5f, -0.5f, -0.5f,  	0.0f, 0.0f, 1.0f,
-//	-0.5f, -0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-//	-0.5f,  0.5f,  0.5f,  	0.0f, 0.0f, 1.0f,
-//
-//	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-//	0.5f,  0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
-//	0.5f, -0.5f, -0.5f, 	1.f, 1.0f, 0.0f,
-//	0.5f, -0.5f, -0.5f,  	1.f, 1.0f, 0.0f,
-//	0.5f, -0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-//	0.5f,  0.5f,  0.5f,  	1.f, 1.0f, 0.0f,
-//
-//	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-//	0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-//	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-//	0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-//	-0.5f, -0.5f,  0.5f,  	1.f, 0.0f, 1.0f,
-//	-0.5f, -0.5f, -0.5f,  	1.f, 0.0f, 1.0f,
-//
-//	-0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
-//	0.5f,  0.5f, -0.5f,  	0.0f, 1.f, 1.0f,
-//	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-//	0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-//	-0.5f,  0.5f,  0.5f,  	0.0f, 1.f, 1.0f,
-//	-0.5f,  0.5f, -0.5f, 	0.0f, 1.f, 1.0f,
-//};
-
-
 int main(int argc, char** argv)
 {
 	// create window
@@ -216,8 +170,8 @@ int main(int argc, char** argv)
 	glUseProgram(skyShaderProgram);
 	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // idk
 
-	SolarSystem solarSys;
 
+	SolarSystem s;
 
 	// model hyper params
 	float earth_scale = 0.3; // make earth smaller
@@ -225,46 +179,26 @@ int main(int argc, char** argv)
 	float distance_modifier = 7; // (not to actual scale)
 
 	// model constants
-	float sun_scale = solarSys.sun.radius / solarSys.earth.radius * earth_scale * sun_scale_modifier;
-	float earth_to_sun_distance = sun_scale * distance_modifier;
+	float sun_scale = s.sun.radius / s.earth.radius * earth_scale * sun_scale_modifier;
+	float earth_to_sun_distance = sun_scale * distance_modifier; // using diameter of the sun
 	
 	// animation hyper params
 	int precision = 2;
 	float earth_orbit_time_span = 240; // time for completing earth orbit animation in seconds
-	float ms_time = (float)glfwGetTime() * 1000;
 
 	// animation object
 	SphereAnimator earthOrbitor = SphereAnimator(
-		earth_orbit_time_span, solarSys.earth.orbital_period, 1.5f, earth_to_sun_distance, solarSys.earth.ecliptic_inclination);
-
-	// animation constants
-	//float earth_delay_per_day = earth_orbit_time_span / solarSys.earth.orbital_period;
-	//float earth_delay_per_orbit_angle = earth_orbit_time_span / 360;
-	//float earth_delay_per_spin_angle = earth_delay_per_day / 360;
-	//float earth_orbit_major_axis_ratio = 1.5;
-	//
-	//// animation variables
-	//float earth_spin_angle = 0;
-	//float earth_spin_timer = 0;
-	//float earth_orbit_angle = 0;
-	//float earth_orbit_timer = 0;
-	//float earth_orbit_posX = earth_to_sun_distance;
-	//float earth_orbit_posY = 0;
+		earth_orbit_time_span, s.earth.orbital_period, 1.5f, earth_to_sun_distance, s.earth.ecliptic_inclination);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
 	{
 
 		// animations calculations
-		ms_time = (float) glfwGetTime() * 1000;
+		float ms_time = (float) glfwGetTime() * 1000;
 		// earth animation calculation
 		earthOrbitor.animate(ms_time, precision, precision);
-		vector<float> earth_vector_pos = earthOrbitor.getOrbitPosition();
-		cout << earthOrbitor.getSpinAngle() << " " << earthOrbitor.getOrbitAngle() << endl;
-		//earthOrbitAngle(ms_time, &earth_orbit_timer, earth_delay_per_orbit_angle, precision, earth_to_sun_distance,
-		//	earth_orbit_major_axis_ratio, &earth_orbit_angle, &earth_orbit_posX, &earth_orbit_posY);
-		//earthSpinAngle(ms_time, &earth_spin_timer, &earth_spin_angle, earth_delay_per_spin_angle, precision);
-		
+		vector<float> earth_vector_pos = earthOrbitor.getOrbitPosition();		
 
 		// input
 		processKeyboard(window);
@@ -288,7 +222,7 @@ int main(int argc, char** argv)
 		glm::vec3 earth_pos = glm::vec3(earth_vector_pos[0], earth_vector_pos[1], earth_vector_pos[2]);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, earth_pos);
-		model = glm::rotate(model, glm::radians(solarSys.earth.axial_tilt), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::rotate(model, glm::radians(s.earth.axial_tilt), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::rotate(model, glm::radians(earthOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(earth_scale));
 
@@ -309,7 +243,7 @@ int main(int argc, char** argv)
 		glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, sun_pos);
-		model = glm::rotate(model, glm::radians(solarSys.sun.axial_tilt), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(s.sun.axial_tilt), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(sun_scale));
 
 		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));

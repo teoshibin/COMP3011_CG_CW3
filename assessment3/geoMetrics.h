@@ -6,9 +6,6 @@
 #define DEG2RAD(n)	n*(M_PI/180)
 #include <vector>
 
-//void earthOrbitAngle(float current_ms_time, float* previous_ms_time, float s_time_delay_per_angle, int precision, float radius, float major_axis_ratio, float* orbit_angle, float* posX, float* posY);
-//void earthSpinAngle(float current_ms_time, float* previous_ms_time, float* spin_angle, float s_time_delay_per_angle, int precision);
-
 struct Earth
 {
 	const float radius = 6371.f; // km
@@ -37,11 +34,12 @@ public:
 
 	// Constructors
 
-	SphereAnimator(float orbitalDelay, float orbitalDays, float initialSpinAngle, float initialOrbitAngle, float ovalRatio, float orbit_radius, float orbit_tilt);
+	SphereAnimator(float orbitalDelay, float orbitalDays, float initialSpinAngle, 
+		float initialOrbitAngle, float ovalRatio, float orbit_radius, float orbit_tilt);
 	SphereAnimator(float orbitalDelay, float orbitalDays, float ovalRatio, float orbit_radius, float orbit_tilt);
 	SphereAnimator() = default;
 
-	// Getter Setter
+	// Essential Math input
 
 	// get time duration of completing full orbit of the sun
 	float getOrbitalDelay();
@@ -53,7 +51,7 @@ public:
 	// set total of days for one full orbit
 	void setOrbitalDays(float days);
 
-
+	// Animation Values
 
 	// get current day cycle angle
 	float getSpinAngle();
@@ -70,8 +68,7 @@ public:
 	// set orbit position
 	void setOrbitPosition(float x, float y, float z);
 
-
-
+	// Cosmetics
 
 	// get orbit ratio for major radius axis
 	float getOvalRatio();
