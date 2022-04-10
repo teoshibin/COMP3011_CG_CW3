@@ -19,7 +19,6 @@
 #include "FlyThroughCamera.h"
 #include "shader.h"
 #include "window.h"
-//#include "shapes.h"
 #include "readModelCSV.h"
 #include "geoMetrics.h"
 
@@ -90,6 +89,8 @@ float skyboxVertices[] = {
 
 int main(int argc, char** argv)
 {
+	// ============= SETUP ==============
+
 	// create window
 	GLFWwindow* window = myCreateWindow(window_width, window_height, "Space Scene");
 
@@ -103,6 +104,8 @@ int main(int argc, char** argv)
 	// init glad
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress);
 
+	// ============= OPENGL =============
+
 	// load shaders
 	//unsigned int circleShaderProgram = LoadShader("circle.vert", "circle.frag");
 	unsigned int sphereShaderProgram = LoadShader("sphere.vert", "sphere.frag");
@@ -111,7 +114,7 @@ int main(int argc, char** argv)
 	
 	// init camera
 	InitCamera(Camera);
-
+	
 	// load all textures
 	const char* files[6] = {
 		"skybox/right.jpg",
@@ -171,8 +174,9 @@ int main(int argc, char** argv)
 	glUseProgram(skyShaderProgram);
 	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // idk
 
+	// =========== MODEL & ANIMATION CONFIG ==============
 
-	SolarSystem s;
+	UniversalConstants c;
 
 	// model hyper params
 	float earth_scale = 0.3; // make earth smaller
@@ -180,26 +184,27 @@ int main(int argc, char** argv)
 	float distance_modifier = 7; // (not to actual scale)
 
 	// model constants
-	float sun_scale = s.sun.radius / s.earth.radius * earth_scale * sun_scale_modifier;
+	float sun_scale = c.SUN_RADIUS / c.EARTH_RADIUS * earth_scale * sun_scale_modifier;
 	float earth_to_sun_distance = sun_scale * distance_modifier; // using diameter of the sun
-	float moon_scale = s.moon.radius / s.earth.radius * earth_scale;
+	float moon_scale = c.MOON_RADIUS / c.EARTH_RADIUS * earth_scale;
 	float moon_to_earth_distance = earth_scale * distance_modifier;
 
 	// animation hyper params
 	int precision = 2;
-	float earth_orbit_time_span = 600; // time for completing earth orbit animation in seconds
+	float earth_orbit_time_span = 240; // time for completing earth orbit animation in seconds
 
 	// animation constants and objects
 
-	// calculate moon time span using ratio (moon_tp / earth_tp) = (moon_orbital_earth_days / orbital_earth_days)
-	float moon_orbit_time_span = earth_orbit_time_span / s.earth.orbital_period * s.moon.earth_days_orbital_period;
+		// calculate moon time span using ratio (moon_tp / earth_tp) = (moon_orbital_earth_days / orbital_earth_days)
+	float moon_orbit_time_span = earth_orbit_time_span / c.EARTH_ORBITAL_PERIOD * c.MOON_EARTH_DAYS_ORBITAL_PERIOD;
 	
 	SphereAnimator earthOrbitor = SphereAnimator(
-		earth_orbit_time_span, s.earth.orbital_period, 1.5f, earth_to_sun_distance, s.earth.ecliptic_inclination);
-	// note that the orbital period unit we're using here is the moon day not earth day
-	// moon got the same rotation and orbit period so the same side will always be facing earth
+		earth_orbit_time_span, c.EARTH_ORBITAL_PERIOD, 1.5f, earth_to_sun_distance, c.EARTH_ECLIPTIC_INCLINATION);
+
+		// note that the orbital period unit we're using here is the moon day not earth day
+		// moon got the same rotation and orbit period so the same side will always be facing earth
 	SphereAnimator moonOrbitor = SphereAnimator(
-		moon_orbit_time_span, s.moon.moon_days_orbital_period, 1.1f, moon_to_earth_distance, s.moon.ecliptic_inclination);
+		moon_orbit_time_span, c.MOON_MOON_DAYS_ORBITAL_PERIOD, 1.1f, moon_to_earth_distance, c.MOON_ECLIPTIC_INCLINATION);
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -234,7 +239,7 @@ int main(int argc, char** argv)
 		glm::vec3 earth_pos = glm::vec3(earth_vector_pos[0], earth_vector_pos[1], earth_vector_pos[2]);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, earth_pos);
-		model = glm::rotate(model, glm::radians(s.earth.axial_tilt), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::rotate(model, glm::radians(c.EARTH_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::rotate(model, glm::radians(earthOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(earth_scale));
 
@@ -254,8 +259,8 @@ int main(int argc, char** argv)
 		glm::vec3 moon_pos = glm::vec3(moon_vector_pos[0], moon_vector_pos[1], moon_vector_pos[2]);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, moon_pos);
-		model = glm::translate(model, earth_pos);
-		model = glm::rotate(model, glm::radians(s.moon.axial_tilt), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::translate(model, earth_pos); // orbiting earth
+		model = glm::rotate(model, glm::radians(c.MOON_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::rotate(model, glm::radians(moonOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(moon_scale));
 
@@ -275,7 +280,7 @@ int main(int argc, char** argv)
 		glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, sun_pos);
-		model = glm::rotate(model, glm::radians(s.sun.axial_tilt), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(c.SUN_AXIAL_TILT), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(sun_scale));
 
 		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
