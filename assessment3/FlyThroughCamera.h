@@ -4,10 +4,15 @@
 //#include "glm/glm/gtx/string_cast.hpp"
 #include "camera.h"
 
+glm::vec3 CalHorizontalFront(SCamera& in)
+{
+	return glm::normalize(glm::cross(in.WorldUp, in.Right));
+}
+
 void MoveCamera(SCamera& in, SCamera::Camera_Movement direction)
 {
-	if (direction == in.FORWARD) in.Position += in.Front * in.MovementSpeed;
-	if (direction == in.BACKWARD) in.Position -= in.Front * in.MovementSpeed;
+	if (direction == in.FORWARD) in.Position += CalHorizontalFront(in) * in.MovementSpeed;
+	if (direction == in.BACKWARD) in.Position -= CalHorizontalFront(in) * in.MovementSpeed;
 	if (direction == in.LEFT) in.Position -= in.Right * in.MovementSpeed;
 	if (direction == in.RIGHT) in.Position += in.Right * in.MovementSpeed;
 	if (direction == in.UPWARD) in.Position += in.WorldUp * in.MovementSpeed;
