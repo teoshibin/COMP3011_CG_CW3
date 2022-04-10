@@ -198,12 +198,12 @@ int main(int argc, char** argv)
 		// calculate moon time span using ratio (moon_tp / earth_tp) = (moon_orbital_earth_days / orbital_earth_days)
 	float moon_orbit_time_span = earth_orbit_time_span / c.EARTH_ORBITAL_PERIOD * c.MOON_EARTH_DAYS_ORBITAL_PERIOD;
 	
-	SphereAnimator earthOrbitor = SphereAnimator(
+	OrbitAnimator earthOrbitor = OrbitAnimator(
 		earth_orbit_time_span, c.EARTH_ORBITAL_PERIOD, 1.5f, earth_to_sun_distance, c.EARTH_ECLIPTIC_INCLINATION);
 
 		// note that the orbital period unit we're using here is the moon day not earth day
 		// moon got the same rotation and orbit period so the same side will always be facing earth
-	SphereAnimator moonOrbitor = SphereAnimator(
+	OrbitAnimator moonOrbitor = OrbitAnimator(
 		moon_orbit_time_span, c.MOON_MOON_DAYS_ORBITAL_PERIOD, 1.1f, moon_to_earth_distance, c.MOON_ECLIPTIC_INCLINATION);
 
 	// render loop
@@ -212,10 +212,13 @@ int main(int argc, char** argv)
 
 		// animations calculations
 		float ms_time = (float) glfwGetTime() * 1000;
+
 		// earth animation calculation
 		earthOrbitor.animate(ms_time, precision, precision);
-		vector<float> earth_vector_pos = earthOrbitor.getOrbitPosition();		
-		moonOrbitor.animate(ms_time, precision, precision);
+		vector<float> earth_vector_pos = earthOrbitor.getOrbitPosition();	
+
+		// animate moon using earth position as origin
+		moonOrbitor.animate(earth_vector_pos, ms_time, precision, precision);
 		vector<float> moon_vector_pos = moonOrbitor.getOrbitPosition();
 
 		// input
@@ -259,7 +262,6 @@ int main(int argc, char** argv)
 		glm::vec3 moon_pos = glm::vec3(moon_vector_pos[0], moon_vector_pos[1], moon_vector_pos[2]);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, moon_pos);
-		model = glm::translate(model, earth_pos); // orbiting earth
 		model = glm::rotate(model, glm::radians(c.MOON_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::rotate(model, glm::radians(moonOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(moon_scale));

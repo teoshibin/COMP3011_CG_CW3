@@ -33,16 +33,17 @@ public:
 
 };
 
-class SphereAnimator
+// animator that calculates positions and angles for simple circular or elipse shape orbit centered at origin
+class OrbitAnimator
 {
 public:
 	
 	// Constructors
 
-	SphereAnimator(float orbitalDelay, float orbitalDays, float initialSpinAngle, 
+	OrbitAnimator(float orbitalDelay, float orbitalDays, float initialSpinAngle, 
 		float initialOrbitAngle, float ovalRatio, float orbit_radius, float orbit_tilt);
-	SphereAnimator(float orbitalDelay, float orbitalDays, float ovalRatio, float orbit_radius, float orbit_tilt);
-	SphereAnimator() = default;
+	OrbitAnimator(float orbitalDelay, float orbitalDays, float ovalRatio, float orbit_radius, float orbit_tilt);
+	OrbitAnimator() = default;
 
 	// Essential Math input
 
@@ -94,14 +95,15 @@ public:
 
 	// animate
 	void animate(float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision);
+	void animate(std::vector<float> orbit_origin, float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision);
 
 private:
 
 	// Private Attributes
 
 	// configs for calculating following parameters
-	float orbital_delay = 600.f;			// time in seconds to complete a full 360 degrees orbit
-	float orbital_days = 1.f;				// total number of spins for every full orbit (animated object's day cycle, not earth's)
+	float orbital_delay = 600.f;	// time in seconds to complete a full 360 degrees orbit
+	float orbital_days = 1.f;		// total number of spins for every full orbit (animated object's day cycle, not earth's)
 
 	// delays
 	float delay_per_orbit_angle = orbital_delay / 360;	// delay for every orbit angle change in seconds
@@ -132,6 +134,6 @@ private:
 	// calculate new spin angle
 	void updateSpin(float current_ms_time, unsigned int precision);
 	// calculate new orbit angle and positions
-	void updateOrbit(float current_ms_time, unsigned int precision);
+	void updateOrbit(std::vector<float> orbit_origin, float current_ms_time, unsigned int precision);
 	
 };
