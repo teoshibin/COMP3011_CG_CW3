@@ -154,7 +154,7 @@
     <ClCompile Include="assessment3.cpp" />
     <ClCompile Include="geoMetrics.cpp" />
     <ClCompile Include="libraries\include\glad\glad.c" />
-    <ClCompile Include="readModelCSV.cpp" />
+    <ClCompile Include="readModel.cpp" />
     <ClCompile Include="shapes.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -173,7 +173,7 @@
     <ClInclude Include="FlyThroughCamera.h" />
     <ClInclude Include="geoMetrics.h" />
     <ClInclude Include="ModelViewerCamera.h" />
-    <ClInclude Include="readModelCSV.h" />
+    <ClInclude Include="readModel.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="shapes.h" />
     <ClInclude Include="stb_image.h" />

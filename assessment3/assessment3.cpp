@@ -19,7 +19,7 @@
 #include "FlyThroughCamera.h"
 #include "shader.h"
 #include "window.h"
-#include "readModelCSV.h"
+#include "readModel.h"
 #include "geoMetrics.h"
 
 using namespace std;
@@ -112,6 +112,25 @@ int main(int argc, char** argv)
 	unsigned int cubeShaderProgram = LoadShader("cube.vert", "cube.frag");
 	unsigned int skyShaderProgram = LoadShader("sky.vert", "sky.frag");
 	
+	ObjFileReader ofr;
+	WholeObj wo;
+	try
+	{
+		wo = ofr.readObj("myObjects/Satellite.obj");
+	}
+	catch (const std::exception& e)
+	{
+		cerr << "Fail to load object file" << endl;
+		cerr << e.what() << endl;
+		return -1;
+	}
+
+	for (int i = 0; i < wo.rawObjects.size(); i++)
+	{
+		cout << wo.rawObjects[i].modelObjectName << endl;
+	}
+
+
 	// init camera
 	InitCamera(Camera);
 	

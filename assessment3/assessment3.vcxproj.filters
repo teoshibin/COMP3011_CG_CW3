@@ -24,7 +24,7 @@
     <ClCompile Include="shapes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="readModelCSV.cpp">
+    <ClCompile Include="readModel.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="geoMetrics.cpp">
@@ -88,7 +88,7 @@
     <ClInclude Include="stb_image.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="readModelCSV.h">
+    <ClInclude Include="readModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="geoMetrics.h">
