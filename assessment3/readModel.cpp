@@ -29,9 +29,10 @@ enum ObjKeywords
 enum class FaceType
 {
 	NO_TYPE = 0,
-	V_VT_VN = 1,
-	V_VN = 2,
-	V_VT = 3
+	V = 1,
+	V_VT_VN = 2,
+	V_VN = 3,
+	V_VT = 4
 };
 
 static map< ObjKeywords, const string > objKeyMap = {
@@ -62,13 +63,16 @@ WholeObj ObjFileReader::readObj(const char* filename)
 
 	// intermediate data
 	char delim = ' ';
-	char sub_delim = '/';
+	char faceDelim = '/';
 
 	WholeObj data;
+
 	string line = "";
 	FaceType faceType = FaceType::NO_TYPE;
-	vector<float> tempf;
-	vector<unsigned int> tempui;
+	FaceType detectedFaceType = FaceType::NO_TYPE;
+	Pair tempP;
+	Triple tempT;
+	vector<unsigned int> tempUI;
 	
 	int lineCount = 0;
 	int objectCount = 0;
@@ -77,9 +81,10 @@ WholeObj ObjFileReader::readObj(const char* filename)
 	{		
 		stringstream inputString(line);
 
-		// first element of the line
+		string subStr = "";		// sub string delimited with delim
+		string fsubStr = "";	// sub string delimited with faceDelim
 
-		string subStr = "";
+		// first element of the line
 		getline(inputString, subStr, delim);
 		ObjKeywords key = objValMap[(const string)subStr];
 		
@@ -87,163 +92,136 @@ WholeObj ObjFileReader::readObj(const char* filename)
 		{
 		case NULL_KEYWORD:
 			throw invalid_argument(
-				errString("ObjFileReader::Unhandle Keyword line", filename, 
-					line, lineCount)
-			);
+				errString("ObjFileReader::Not Supported Keyword line", 
+					filename, line, lineCount));
 			break;
 
 		case COMMENT: // do nothing
 			break;
 			
 		case MATERIAL_FILE:
-			parse1s(inputString, subStr, delim);		
-			data.mtl_file = subStr;		
-			parseEOL(
-				inputString, 
-				errString("ObjFileReader::Too many paths for a single material file", filename, 
-					line, lineCount), 
-				delim
-			);
+			parse1s(inputString, delim, subStr);
+			data.mtl_file = subStr;	
+			parseEOL(inputString, delim, 
+				errString("ObjFileReader::Too many paths for a single material file", 
+					filename, line, lineCount));
 			break;
 
 		case OBJECT:
-			data.rawObjects.push_back(RawObj());		
-			parse1s(inputString, subStr, delim);		
-			data.rawObjects.back().modelObjectName = subStr;
-			parseEOL(
-				inputString, 
-				errString("ObjFileReader::Too many names for a single object", filename, 
-					line, lineCount), 
-				delim
-			);
-			faceType = FaceType::NO_TYPE; // for parsing face later on
+			data.subObjects.push_back(SubObj());		
+			parse1s(inputString, delim, subStr);
+			data.subObjects.back().modelObjectName = subStr;
+			parseEOL(inputString, delim,
+				errString("ObjFileReader::Too many names for a single object", 
+					filename, line, lineCount));
+			faceType = FaceType::NO_TYPE; // reset face type for parsing new object face later on
 			break;
 
 		case GROUP:
 			throw invalid_argument(
-				errString("ObjFileReader::Object grouping is not handled", filename, 
-					line, lineCount)
-			);
+				errString("ObjFileReader::Object grouping is not supported",
+					filename, line, lineCount));
 			break;
 
 		case VERTEX:			
-			tempf = parseNf(
-				inputString, 3, delim, 
-				errString("ObjFileReader::Length of vertex coordinate is not 3", filename, 
-					line, lineCount)
-			);
-			data.rawObjects.back().vertices.insert(
-				end(data.rawObjects.back().vertices),
-				begin(tempf),
-				end(tempf)
-			);
+			tempT = parse3f(
+				inputString, delim, 
+				errString("ObjFileReader::Length of vertex coordinate is not 3", 
+					filename, line, lineCount));
+			data.vertices.push_back(tempT);
 			parseEOL(
-				inputString, 
-				errString("ObjFileReader::More than 3 points in a vertex, vertex must be trangulated", 
-					filename, line, lineCount), 
-				delim
-			);
+				inputString, delim,
+				errString("ObjFileReader::More than 3 points in a vertex", 
+					filename, line, lineCount));
 			break;
 
 		case TEXTURE_MAP:			
-			tempf = parseNf(
-				inputString, 2, delim, 
+			tempP = parse2f(
+				inputString, delim, 
 				errString("ObjFileReader::Length of texture coordinate is not 2",
-					filename, line, lineCount)
-			);
-			data.rawObjects.back().textureMap.insert(
-				end(data.rawObjects.back().textureMap),
-				begin(tempf),
-				end(tempf)
-			);
+					filename, line, lineCount));
+			data.texCoords.push_back(tempP);
 			parseEOL(
-				inputString, 
-				errString("ObjFileReader::More than 3 points in a vertex", 
-					filename, line, lineCount), 
-				delim
-			);
+				inputString, delim, 
+				errString("ObjFileReader::More than 2 points in texture coordinate", 
+					filename, line, lineCount));
 			break;
 
 		case NORMAL:			
-			tempf = parseNf(
-				inputString, 3, delim, 
-				errString("ObjFileReader::Length of normals is not 3",
-				filename, line, lineCount)
-			);
-			data.rawObjects.back().normals.insert(
-				end(data.rawObjects.back().normals),
-				begin(tempf),
-				end(tempf)
-			);
+			tempT = parse3f(
+				inputString, delim, 
+				errString("ObjFileReader::Length of normals is not 3", 
+					filename, line, lineCount));
+			data.normals.push_back(tempT);
 			parseEOL(
-				inputString,
+				inputString, delim,
 				errString("ObjFileReader::More than 3 values in a normals",
-					filename, line, lineCount),
-				delim
-			);
+					filename, line, lineCount));
 			break;
 
 		case USE_MATERIAL:
-			parse1s(inputString, subStr, delim);
-			data.rawObjects.back().useMaterial = subStr;			
+			parse1s(inputString, delim, subStr);
+			data.subObjects.back().useMaterial = subStr;			
 			parseEOL(
-				inputString, 
+				inputString, delim,
 				errString("ObjFileReader::Use too many materials",
-					filename, line, lineCount), 
-				delim
-			);
+					filename, line, lineCount));
 			break;
 
 		case SMOOTH_SHADDING:
-			parse1s(inputString, subStr, delim);
-			data.rawObjects.back().smoothShadding = subStr;
+			parse1s(inputString, delim, subStr);
+			data.subObjects.back().smoothShadding = subStr;
 			parseEOL(
-				inputString, 
+				inputString, delim,
 				errString("ObjFileReader::Too many arguments in smooth shadding",
-					filename, line, lineCount), 
-				delim
-			);
+					filename, line, lineCount));
 			break;
 
-		case FACE_INDEX:			
+		case FACE_INDEX:
 			for (int i = 0; i < 3; i++)
 			{
-				parse1s(inputString, subStr, delim);
-				stringstream idStream(subStr);
-				tempui = parseFace(
-					idStream, faceType, sub_delim,
-					errString("ObjFileReader::Invalid Face Indices",
-						filename, line, lineCount)
-				);
+				parse1s(inputString, delim, subStr);
+				stringstream subFaceStr(subStr);
+				detectedFaceType = parseSubFace(subFaceStr, faceDelim, tempUI,
+					errString("ObjFileReader::Invalid Face Indices Type",
+						filename, line, lineCount));
+				
+				if (faceType == FaceType::NO_TYPE)
+				{
+					faceType = detectedFaceType;
+				}
+				else 
+				{
+					if (detectedFaceType != faceType)
+					{
+						throw invalid_argument(
+							errString("ObjFileReader::Inconsistent Face Indices Type",
+								filename, line, lineCount));
+					}
+				}
+
+				data.subObjects.back().verticesIdx.push_back(tempUI[0]);
 				switch (faceType)
 				{
 				case FaceType::V_VT_VN:
-					data.rawObjects.back().verticesIdx.push_back(tempui[0]);
-					data.rawObjects.back().textureMapIdx.push_back(tempui[1]);
-					data.rawObjects.back().normalsIdx.push_back(tempui[2]);
+					data.subObjects.back().textureMapIdx.push_back(tempUI[1]);
+					data.subObjects.back().normalsIdx.push_back(tempUI[2]);
 					break;
 				case FaceType::V_VN:
-					data.rawObjects.back().verticesIdx.push_back(tempui[0]);
-					data.rawObjects.back().normalsIdx.push_back(tempui[1]);
+					data.subObjects.back().normalsIdx.push_back(tempUI[1]);
 					break;
 				case FaceType::V_VT:
-					data.rawObjects.back().verticesIdx.push_back(tempui[0]);
-					data.rawObjects.back().textureMapIdx.push_back(tempui[1]);
+					data.subObjects.back().textureMapIdx.push_back(tempUI[1]);
 					break;
 				}
+
 			}
-			parseEOL(
-				inputString,
+			parseEOL(inputString, delim,
 				errString("ObjFileReader::More than 3 sets of indices, please triangulate object",
-					filename, line, lineCount),
-				delim
-			);
+					filename, line, lineCount));
 			break;
 		}
 
-		// end of line reset line string
-		tempf.clear();
-		tempui.clear();
 		line = "";
 		lineCount++;
 	}
@@ -258,130 +236,144 @@ WholeObj ObjFileReader::readObj(const char* filename)
 
 void ObjFileReader::expandVertices(WholeObj& data)
 {
-	// TODO FIX ACCUMULATIVE INDEX (to allow indexing from other sub objects)
-
-	for (int i = 0; i < data.rawObjects.size(); i++)
+	for (int i = 0; i < data.subObjects.size(); i++)
 	{
-		RawObj& rawObjI = data.rawObjects[i];
-		bool texIsNotEmpty = (rawObjI.textureMap.size() != 0);
-		bool norIsNotEmpty = (rawObjI.normals.size() != 0);
+		SubObj& subObjI = data.subObjects[i];
 
-		for (int j = 0; j < data.rawObjects[i].verticesIdx.size(); j++)
-		{
+		vector<Triple>& ver = data.vertices;
+		vector<Pair>& tex = data.texCoords;
+		vector<Triple>& nor = data.normals;
 
-			int vIdx = (rawObjI.verticesIdx[j] - 1) * 3;
-			rawObjI.expandedVertices.push_back(rawObjI.vertices[vIdx    ]); // vx
-			rawObjI.expandedVertices.push_back(rawObjI.vertices[vIdx + 1]); // vy
-			rawObjI.expandedVertices.push_back(rawObjI.vertices[vIdx + 2]); // vz
-
-			int tIdx = (rawObjI.textureMapIdx[j] - 1) * 2;
-			if (texIsNotEmpty) 
-			{
-				rawObjI.expandedVertices.push_back(rawObjI.textureMap[tIdx]);	  // u
-				rawObjI.expandedVertices.push_back(rawObjI.textureMap[tIdx + 1]); // v
-			}
-
-			int nIdx = (rawObjI.normalsIdx[j] - 1) * 3;
-			if (norIsNotEmpty)
-			{
-				rawObjI.expandedVertices.push_back(rawObjI.normals[nIdx]);	   // nx
-				rawObjI.expandedVertices.push_back(rawObjI.normals[nIdx + 1]); // ny
-				rawObjI.expandedVertices.push_back(rawObjI.normals[nIdx + 2]); // nz
-			}
-
-			cout << i << " " << j << " " << vIdx << " " << tIdx << " " << nIdx << endl;
-		}
+		vector<unsigned int>& vId = subObjI.verticesIdx;
+		vector<unsigned int>& tId = subObjI.textureMapIdx;
+		vector<unsigned int>& nId = subObjI.normalsIdx;
 		
-	}
+		vector<float>& exVer = subObjI.expandedVertices;
+		
+		for (int j = 0; j < vId.size(); j++)
+		{
+			// sequentially index index of vertex and use it to index vertex
+			exVer.push_back(ver[vId[j]-1].x);
+			exVer.push_back(ver[vId[j]-1].y);
+			exVer.push_back(ver[vId[j]-1].z);
 
+			// sequentially index index of texCoord and use it to index textureCoord
+			exVer.push_back(tex[tId[j]-1].x);
+			exVer.push_back(tex[tId[j]-1].y);
+
+			// sequentially index index of normals and use it to index normals
+			exVer.push_back(nor[nId[j]-1].x);
+			exVer.push_back(nor[nId[j]-1].y);
+			exVer.push_back(nor[nId[j]-1].z);
+		}
+	}
 };
 
 
 
 // ========== Auxilliary Functions =============
 
-bool ObjFileReader::parse1s(stringstream& ss, string& outputString, char delim)
+// == string parser ==
+
+bool ObjFileReader::parse1s(stringstream& ss, char delim, string& outputString)
 {
 	return (bool)getline(ss, outputString, delim);
 }
 
-void ObjFileReader::parseEOL(stringstream& ss, string errStr, char delim)
-{
-	string str = "";
-	if (parse1s(ss, str, delim)) throw invalid_argument(errStr);
-	return;
-}
+// == float parser ==
 
-float ObjFileReader::parse1f(stringstream& ss, string errStr, char delim)
+float ObjFileReader::parse1f(stringstream& ss, char delim, string errStr)
 {
 	string out = "";
 	getline(ss, out, delim);
+	if (out.size() == 0) throw invalid_argument(errStr);
 	return stof(out.c_str());
 }
 
-unsigned int ObjFileReader::parse1ui(stringstream& ss, string errStr, char delim)
+Pair ObjFileReader::parse2f(stringstream& ss, char delim, string errStr) 
+{
+	Pair p;
+	p.x = parse1f(ss, delim, errStr);
+	p.y = parse1f(ss, delim, errStr);
+	return p;
+}
+
+Triple ObjFileReader::parse3f(stringstream& ss, char delim, string errStr)
+{
+	Triple t;
+	t.x = parse1f(ss, delim, errStr);
+	t.y = parse1f(ss, delim, errStr);
+	t.z = parse1f(ss, delim, errStr);
+	return t;
+}
+
+// == int parser ==
+
+bool ObjFileReader::parse1ui(stringstream& ss, char delim, unsigned int& outInt, string errStr)
 {
 	string out = "";
 	getline(ss, out, delim);
-	if (out.size() == 0) return NULL; // based on the fact that index in obj files are not starting from 0
-	return (unsigned int) stoi(out.c_str());
-}
-
-vector<float> ObjFileReader::parseNf(stringstream& ss, unsigned int n, char delim, string errStr)
-{
-	vector<float> point;
-	for (int i = 0; i < n; i++)
-	{
-		point.push_back(parse1f(ss, errStr, delim));
+	if (out.size() == 0) 
+	{ 
+		outInt = 0u; 
+		return false;
 	}
-	if (point.size() != n) throw invalid_argument(errStr);
-	return point;
-}
-
-vector<unsigned int> ObjFileReader::parseFace(stringstream& ss, FaceType& type, char delim, string errStr)
-{
-	vector<unsigned int> idxs;
-	FaceType newType = FaceType::NO_TYPE;
-
-	// parse V
-	unsigned int id = parse1ui(ss, errStr, delim);
-	idxs.push_back(id);
-
-	// parse VT or Nothing
-	id = parse1ui(ss, errStr, delim);
-	if (id)
-	{
-		idxs.push_back(id);
-		newType = FaceType::V_VT;
-	} 
 	else
 	{
-		newType = FaceType::V_VN;
+		outInt = (unsigned int)stoi(out.c_str());
+		return true;
+	}
+}
+
+// == special parser ==
+
+bool ObjFileReader::parseEOL(stringstream& ss, char delim)
+{
+	string str = "";
+	streampos save = ss.tellg();
+	bool isEOL = !(bool)getline(ss, str, delim);
+	ss.seekg(save);
+	save = ss.tellg();
+	return isEOL;
+}
+
+void ObjFileReader::parseEOL(stringstream& ss, char delim, string errStr)
+{
+	if (!parseEOL(ss, delim)) throw invalid_argument(errStr);
+}
+
+FaceType ObjFileReader::parseSubFace(stringstream& ss, char delim, vector<unsigned int>& outVec, string errStr)
+{
+	FaceType newType = FaceType::V;	
+	outVec.clear();
+
+	// parse V
+	unsigned int id = 0u;
+	parse1ui(ss, delim, id, errStr);
+	outVec.push_back(id);
+	if (parseEOL(ss, delim)) return newType; // if ended then it contains only V
+
+	// parse VT or Nothing
+	if (parse1ui(ss, delim, id, errStr))
+	{ 
+		outVec.push_back(id);
+		newType = FaceType::V_VT;
+		if (parseEOL(ss, delim)) return newType;
 	}
 
 	// parse VN or Nothing
-	id = parse1ui(ss, errStr, delim);
-	if (id)
-	{
-		idxs.push_back(id);
-		if (newType == FaceType::V_VT)	newType = FaceType::V_VT_VN;
+	if (parse1ui(ss, delim, id, errStr))
+	{ 
+		outVec.push_back(id);
+		if (newType == FaceType::V) newType = FaceType::V_VN;
+		else if (newType == FaceType::V_VT) newType = FaceType::V_VT_VN;
 	}
-	else
-	{
-		throw invalid_argument(errStr);
-	}
-	
-	if (type == FaceType::NO_TYPE)
-	{
-		type = newType;
-	} 
-	else if (type != newType)
-	{
-		throw invalid_argument(errStr);
-	}
+	parseEOL(ss, delim, errStr);
 
-	return idxs;
+	return newType;
 }
+
+// general methods
 
 string ObjFileReader::errString(string msg, const char* filename, string line, int lineCount)
 {

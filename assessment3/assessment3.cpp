@@ -112,11 +112,19 @@ int main(int argc, char** argv)
 	unsigned int cubeShaderProgram = LoadShader("cube.vert", "cube.frag");
 	unsigned int skyShaderProgram = LoadShader("sky.vert", "sky.frag");
 	
+	// load objects
+	//vector<float> sphere_vertices = readVerticesCSV("myObjects/sphere_vertices.csv");
+	//vector<unsigned int> sphere_indices = readIndicesCSV("myObjects/sphere_indices.csv");
+
 	ObjFileReader ofr;
-	WholeObj wo;
+	WholeObj sphereObj;
+	WholeObj cubeObj;
+
+	cout << "Loading Objects..." << endl;
 	try
 	{
-		wo = ofr.readObj("myObjects/Satellite.obj");
+		sphereObj = ofr.readObj("myObjects/sphere.obj");
+		//cubeObj = ofr.readObj("myObjects/cube.obj");
 	}
 	catch (const std::exception& e)
 	{
@@ -124,12 +132,8 @@ int main(int argc, char** argv)
 		cerr << e.what() << endl;
 		return -1;
 	}
-
-	for (int i = 0; i < wo.rawObjects.size(); i++)
-	{
-		cout << wo.rawObjects[i].modelObjectName << endl;
-	}
-
+	cout << "Objects Loaded" << endl;
+	vector<float>& sphereVert = sphereObj.subObjects[0].expandedVertices;
 
 	// init camera
 	InitCamera(Camera);
@@ -148,26 +152,44 @@ int main(int argc, char** argv)
 	GLuint moonTexture = loadTexture("myObjects/moon.png", STBI_rgb_alpha);
 	GLuint sunTexture = loadTexture("myObjects/sun.png", STBI_rgb_alpha);
 
-	// sphere
-	vector<float> sphere_vertices = readVerticesCSV("myObjects/sphere_vertices.csv");
-	vector<unsigned int> sphere_indices = readIndicesCSV("myObjects/sphere_indices.csv");
-	
-	unsigned int sphereVAO, sphereVBO, sphereIBO;
+	// cube
+	//unsigned int cubeVAO, cubeVBO;
+	//glGenVertexArrays(1, &cubeVAO);
+	//glBindVertexArray(cubeVAO);
+
+	//glGenBuffers(1, &cubeVBO);
+	//glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
+	////glBufferData(GL_ARRAY_BUFFER, sphere_vertices.size() * sizeof(float), &sphere_vertices[0], GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, cubeObj.subObjects[0].expandedVertices.size() * sizeof(float), &cubeObj.subObjects[0].expandedVertices[0], GL_STATIC_DRAW);
+
+	//glEnableVertexAttribArray(0);
+	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	//glEnableVertexAttribArray(1);
+	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	//glEnableVertexAttribArray(2);
+	//glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+
+	// sphere	
+	unsigned int sphereVAO, sphereVBO;
+	//unsigned int sphereIBO;
 	glGenVertexArrays(1, &sphereVAO);
 	glBindVertexArray(sphereVAO);
 
 	glGenBuffers(1, &sphereVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-	glBufferData(GL_ARRAY_BUFFER, sphere_vertices.size() * sizeof(float), &sphere_vertices[0], GL_STATIC_DRAW);
+	//glBufferData(GL_ARRAY_BUFFER, sphere_vertices.size() * sizeof(float), &sphere_vertices[0], GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sphereObj.subObjects[0].expandedVertices.size() * sizeof(float), &sphereObj.subObjects[0].expandedVertices[0], GL_STATIC_DRAW);
 	
 	glEnableVertexAttribArray(0);
-	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
 	glEnableVertexAttribArray(1);
-	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 
-	glGenBuffers(1, &sphereIBO);
-	glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
-	glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphere_indices.size() * sizeof(unsigned int), &sphere_indices[0], GL_STATIC_DRAW);
+	//glGenBuffers(1, &sphereIBO);
+	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
+	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphere_indices.size() * sizeof(unsigned int), &sphere_indices[0], GL_STATIC_DRAW);
 
 	// skybox
 	unsigned int skyVAO, skyVBO;
@@ -271,11 +293,12 @@ int main(int argc, char** argv)
 
 		glBindTexture(GL_TEXTURE_2D, earthTexture);
 		glBindVertexArray(sphereVAO);
-		glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
+		glDrawArrays(GL_TRIANGLES, 0, sphereVert.size()/8);
+		//glDrawElements(GL_TRIANGLES, sphereVert.size(), GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
 
-		// sphere - moon
+		//// sphere - moon
 		glUseProgram(sphereShaderProgram);
 
 		glm::vec3 moon_pos = glm::vec3(moon_vector_pos[0], moon_vector_pos[1], moon_vector_pos[2]);
@@ -291,7 +314,8 @@ int main(int argc, char** argv)
 
 		glBindTexture(GL_TEXTURE_2D, moonTexture);
 		glBindVertexArray(sphereVAO);
-		glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
+		glDrawArrays(GL_TRIANGLES, 0, sphereVert.size()/8);
+		//glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
 
@@ -310,9 +334,30 @@ int main(int argc, char** argv)
 
 		glBindTexture(GL_TEXTURE_2D, sunTexture);
 		glBindVertexArray(sphereVAO);
-		glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
+		glDrawArrays(GL_TRIANGLES, 0, sphereVert.size()/8);
+		//glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
+
+		// cube
+		//glUseProgram(cubeShaderProgram);
+
+		//glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+		//model = glm::mat4(1.f);
+		//model = glm::translate(model, sun_pos);
+		//model = glm::rotate(model, glm::radians(c.SUN_AXIAL_TILT), glm::vec3(0.f, 1.f, 0.f));
+		//model = glm::scale(model, glm::vec3(sun_scale));
+
+		//glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		//glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		//glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		////glBindTexture(GL_TEXTURE_2D, sunTexture);
+		//glBindVertexArray(cubeVAO);
+		//glDrawArrays(GL_TRIANGLES, 0, cubeObj.subObjects[0].verticesIdx.size());
+		////glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
+		//glBindTexture(GL_TEXTURE_2D, 0);
+		//glBindVertexArray(0);
 
 		// skybox
 		glDepthFunc(GL_LEQUAL);
@@ -328,6 +373,11 @@ int main(int argc, char** argv)
 		glBindVertexArray(0);
 		glDepthFunc(GL_LESS); // set depth function back to default
 
+		GLenum err;
+		while ((err = glGetError()) != GL_NO_ERROR)
+		{
+			cout << err << endl;
+		}
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(window);
@@ -335,13 +385,13 @@ int main(int argc, char** argv)
 	}
 
 	// optional clean up
-	glDeleteVertexArrays(1, &sphereVAO);
-	glDeleteVertexArrays(1, &skyVAO);
+	//glDeleteVertexArrays(1, &sphereVAO);
+	//glDeleteVertexArrays(1, &skyVAO);
 
-	glDeleteBuffers(1, &sphereVBO);
-	glDeleteBuffers(1, &skyVBO);
+	//glDeleteBuffers(1, &sphereVBO);
+	//glDeleteBuffers(1, &skyVBO);
 
-	glDeleteBuffers(1, &sphereIBO);
+	//glDeleteBuffers(1, &sphereIBO);
 
 	glfwTerminate();
 	return 0;
