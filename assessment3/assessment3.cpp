@@ -10,8 +10,6 @@
 #include <vector>
 
 // helper libraries
-// load image
-#define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
 // custom functions
@@ -20,6 +18,7 @@
 #include "shader.h"
 #include "window.h"
 #include "readModel.h"
+#include "shapes.h"
 #include "geoMetrics.h"
 
 using namespace std;
@@ -27,8 +26,9 @@ using namespace std;
 // prototypes
 void processKeyboard(GLFWwindow* window);
 void processMouse(GLFWwindow* window, double x, double y);
-unsigned int loadCubemap(const char* filename[6]);
-unsigned int loadTexture(const char* filename, int stbi_enum);
+unsigned int loadCubemap(vector<string> filename);
+unsigned int loadTexture(const char* filename);
+void displayLoadingScreen(GLFWwindow* window);
 
 // settings
 int window_width = 1280;
@@ -40,51 +40,14 @@ bool firstMouse = true;
 float prevMouseX;
 float prevMouseY;
 
-// hard coded shapes
+vector<float> rectVert{
+	-1.f, 1.f, 0.f,		0, 1,	//tl
+	1.f, 1.f, 0.f,		1, 1,	//tr
+	1.f, -1.f, 0.f,		1, 0,	//br
 
-float skyboxVertices[] = {
-	// positions          
-	-1.0f,  1.0f, -1.0f,
-	-1.0f, -1.0f, -1.0f,
-	 1.0f, -1.0f, -1.0f,
-	 1.0f, -1.0f, -1.0f,
-	 1.0f,  1.0f, -1.0f,
-	-1.0f,  1.0f, -1.0f,
-
-	-1.0f, -1.0f,  1.0f,
-	-1.0f, -1.0f, -1.0f,
-	-1.0f,  1.0f, -1.0f,
-	-1.0f,  1.0f, -1.0f,
-	-1.0f,  1.0f,  1.0f,
-	-1.0f, -1.0f,  1.0f,
-
-	 1.0f, -1.0f, -1.0f,
-	 1.0f, -1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f, -1.0f,
-	 1.0f, -1.0f, -1.0f,
-
-	-1.0f, -1.0f,  1.0f,
-	-1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f, -1.0f,  1.0f,
-	-1.0f, -1.0f,  1.0f,
-
-	-1.0f,  1.0f, -1.0f,
-	 1.0f,  1.0f, -1.0f,
-	 1.0f,  1.0f,  1.0f,
-	 1.0f,  1.0f,  1.0f,
-	-1.0f,  1.0f,  1.0f,
-	-1.0f,  1.0f, -1.0f,
-
-	-1.0f, -1.0f, -1.0f,
-	-1.0f, -1.0f,  1.0f,
-	 1.0f, -1.0f, -1.0f,
-	 1.0f, -1.0f, -1.0f,
-	-1.0f, -1.0f,  1.0f,
-	 1.0f, -1.0f,  1.0f
+	-1.f, 1.f, 0.f,		0,1,	//tl
+	1.f,  -1.f, 0.f,		1,0,	//br
+	-1.f,  -1.f, 0.f,	0,0		//bl
 };
 
 int main(int argc, char** argv)
@@ -106,25 +69,21 @@ int main(int argc, char** argv)
 
 	// ============= OPENGL =============
 
-	// load shaders
-	//unsigned int circleShaderProgram = LoadShader("circle.vert", "circle.frag");
-	unsigned int sphereShaderProgram = LoadShader("sphere.vert", "sphere.frag");
-	unsigned int cubeShaderProgram = LoadShader("cube.vert", "cube.frag");
-	unsigned int skyShaderProgram = LoadShader("sky.vert", "sky.frag");
-	
-	// load objects
-	//vector<float> sphere_vertices = readVerticesCSV("myObjects/sphere_vertices.csv");
-	//vector<unsigned int> sphere_indices = readIndicesCSV("myObjects/sphere_indices.csv");
+	// init camera
+	InitCamera(Camera);
 
+	// loading screen (this uses opengl code camera must be init before this)
+	displayLoadingScreen(window);
+
+	// load objects
 	ObjFileReader ofr;
 	WholeObj sphereObj;
-	WholeObj cubeObj;
-
+	WholeObj ufoObj;
 	cout << "Loading Objects..." << endl;
 	try
 	{
 		sphereObj = ofr.readObj("myObjects/sphere.obj");
-		//cubeObj = ofr.readObj("myObjects/cube.obj");
+		ufoObj = ofr.readObj("myObjects/ufo_1.obj");
 	}
 	catch (const std::exception& e)
 	{
@@ -132,52 +91,55 @@ int main(int argc, char** argv)
 		cerr << e.what() << endl;
 		return -1;
 	}
-	cout << "Objects Loaded" << endl;
+	vector<float> skyboxVert = getSkyboxCube();
 	vector<float>& sphereVert = sphereObj.subObjects[0].expandedVertices;
+	vector<float>& ufoVert = ufoObj.subObjects[0].expandedVertices;
+	cout << "Objects Loaded" << endl;
 
-	// init camera
-	InitCamera(Camera);
+	// load shaders
+	unsigned int basicShaderProgram = LoadShader("basic.vert", "basic.frag");
+	unsigned int skyShaderProgram = LoadShader("sky.vert", "sky.frag");
+	glUseProgram(skyShaderProgram);
+	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // set texture to 0
 	
 	// load all textures
-	const char* files[6] = {
+	GLuint earthTexture = loadTexture("myObjects/earth.png");
+	GLuint moonTexture = loadTexture("myObjects/moon.png");
+	GLuint sunTexture = loadTexture("myObjects/sun.png");
+	GLuint ufoTexture = loadTexture("myObjects/ufo_kd.jpg");
+	vector<string> files = {
 		"skybox/right.jpg",
 		"skybox/left.jpg",
-		"skybox/top.jpg",
 		"skybox/bottom.jpg",
+		"skybox/top.jpg",
 		"skybox/front.jpg",
 		"skybox/back.jpg"
 	};
 	GLuint cubemapTexture = loadCubemap(files);
-	GLuint earthTexture = loadTexture("myObjects/earth.png", STBI_rgb_alpha);
-	GLuint moonTexture = loadTexture("myObjects/moon.png", STBI_rgb_alpha);
-	GLuint sunTexture = loadTexture("myObjects/sun.png", STBI_rgb_alpha);
 
-	// cube
-	//unsigned int cubeVAO, cubeVBO;
-	//glGenVertexArrays(1, &cubeVAO);
-	//glBindVertexArray(cubeVAO);
+	// ufo	
+	unsigned int ufoVAO, ufoVBO;
+	glGenVertexArrays(1, &ufoVAO);
+	glBindVertexArray(ufoVAO);
 
-	//glGenBuffers(1, &cubeVBO);
-	//glBindBuffer(GL_ARRAY_BUFFER, cubeVBO);
-	////glBufferData(GL_ARRAY_BUFFER, sphere_vertices.size() * sizeof(float), &sphere_vertices[0], GL_STATIC_DRAW);
-	//glBufferData(GL_ARRAY_BUFFER, cubeObj.subObjects[0].expandedVertices.size() * sizeof(float), &cubeObj.subObjects[0].expandedVertices[0], GL_STATIC_DRAW);
+	glGenBuffers(1, &ufoVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, ufoVBO);
+	glBufferData(GL_ARRAY_BUFFER, ufoVert.size() * sizeof(float), &ufoVert[0], GL_STATIC_DRAW);
 
-	//glEnableVertexAttribArray(0);
-	//glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
-	//glEnableVertexAttribArray(1);
-	//glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
-	//glEnableVertexAttribArray(2);
-	//glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(3 * sizeof(float)));
+	glEnableVertexAttribArray(2);
+	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 
 	// sphere	
 	unsigned int sphereVAO, sphereVBO;
-	//unsigned int sphereIBO;
 	glGenVertexArrays(1, &sphereVAO);
 	glBindVertexArray(sphereVAO);
 
 	glGenBuffers(1, &sphereVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, sphereVBO);
-	//glBufferData(GL_ARRAY_BUFFER, sphere_vertices.size() * sizeof(float), &sphere_vertices[0], GL_STATIC_DRAW);
 	glBufferData(GL_ARRAY_BUFFER, sphereObj.subObjects[0].expandedVertices.size() * sizeof(float), &sphereObj.subObjects[0].expandedVertices[0], GL_STATIC_DRAW);
 	
 	glEnableVertexAttribArray(0);
@@ -187,10 +149,6 @@ int main(int argc, char** argv)
 	glEnableVertexAttribArray(2);
 	glVertexAttribPointer(2, 3, GL_FLOAT, GL_FALSE, 8 * sizeof(float), (void*)(5 * sizeof(float)));
 
-	//glGenBuffers(1, &sphereIBO);
-	//glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, sphereIBO);
-	//glBufferData(GL_ELEMENT_ARRAY_BUFFER, sphere_indices.size() * sizeof(unsigned int), &sphere_indices[0], GL_STATIC_DRAW);
-
 	// skybox
 	unsigned int skyVAO, skyVBO;
 	glGenVertexArrays(1, &skyVAO);
@@ -198,7 +156,7 @@ int main(int argc, char** argv)
 
 	glGenBuffers(1, &skyVBO);
 	glBindBuffer(GL_ARRAY_BUFFER, skyVBO);
-	glBufferData(GL_ARRAY_BUFFER, sizeof(skyboxVertices), skyboxVertices, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, skyboxVert.size() * sizeof(float), &skyboxVert[0], GL_STATIC_DRAW);
 
 	glEnableVertexAttribArray(0);
 	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
@@ -211,14 +169,13 @@ int main(int argc, char** argv)
 	glEnable(GL_DEPTH_TEST);
 
 	// use shader
-	glUseProgram(cubeShaderProgram);
-	glUseProgram(skyShaderProgram);
-	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // idk
+	//glUseProgram(cubeShaderProgram);
+	//glUseProgram(skyShaderProgram);	
 
 	// =========== MODEL & ANIMATION CONFIG ==============
-
+	
 	UniversalConstants c;
-
+	
 	// model hyper params
 	float earth_scale = 0.3; // make earth smaller
 	float sun_scale_modifier = 0.05; // make sun smaller (not to actual scale)
@@ -238,14 +195,15 @@ int main(int argc, char** argv)
 
 		// calculate moon time span using ratio (moon_tp / earth_tp) = (moon_orbital_earth_days / orbital_earth_days)
 	float moon_orbit_time_span = earth_orbit_time_span / c.EARTH_ORBITAL_PERIOD * c.MOON_EARTH_DAYS_ORBITAL_PERIOD;
-	
+
 	OrbitAnimator earthOrbitor = OrbitAnimator(
 		earth_orbit_time_span, c.EARTH_ORBITAL_PERIOD, 1.5f, earth_to_sun_distance, c.EARTH_ECLIPTIC_INCLINATION);
 
-		// note that the orbital period unit we're using here is the moon day not earth day
-		// moon got the same rotation and orbit period so the same side will always be facing earth
+	// note that the orbital period unit we're using here is the moon day not earth day
+	// moon got the same rotation and orbit period so the same side will always be facing earth
 	OrbitAnimator moonOrbitor = OrbitAnimator(
 		moon_orbit_time_span, c.MOON_MOON_DAYS_ORBITAL_PERIOD, 1.1f, moon_to_earth_distance, c.MOON_ECLIPTIC_INCLINATION);
+
 
 	// render loop
 	while (!glfwWindowShouldClose(window))
@@ -253,12 +211,8 @@ int main(int argc, char** argv)
 
 		// animations calculations
 		float ms_time = (float) glfwGetTime() * 1000;
-
-		// earth animation calculation
 		earthOrbitor.animate(ms_time, precision, precision);
-		vector<float> earth_vector_pos = earthOrbitor.getOrbitPosition();	
-
-		// animate moon using earth position as origin
+		vector<float> earth_vector_pos = earthOrbitor.getOrbitPosition();
 		moonOrbitor.animate(earth_vector_pos, ms_time, precision, precision);
 		vector<float> moon_vector_pos = moonOrbitor.getOrbitPosition();
 
@@ -278,7 +232,7 @@ int main(int argc, char** argv)
 		projection = glm::perspective(glm::radians(Camera.FOV), (float)window_width / (float)window_height, 0.1f, 100.f);
 
 		// sphere - earth
-		glUseProgram(sphereShaderProgram);				
+		glUseProgram(basicShaderProgram);				
 
 		glm::vec3 earth_pos = glm::vec3(earth_vector_pos[0], earth_vector_pos[1], earth_vector_pos[2]);
 		model = glm::mat4(1.f);
@@ -287,19 +241,19 @@ int main(int argc, char** argv)
 		model = glm::rotate(model, glm::radians(earthOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(earth_scale));
 
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-		glBindTexture(GL_TEXTURE_2D, earthTexture);
 		glBindVertexArray(sphereVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, earthTexture);
 		glDrawArrays(GL_TRIANGLES, 0, sphereVert.size()/8);
-		//glDrawElements(GL_TRIANGLES, sphereVert.size(), GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
 
 		//// sphere - moon
-		glUseProgram(sphereShaderProgram);
+		glUseProgram(basicShaderProgram);
 
 		glm::vec3 moon_pos = glm::vec3(moon_vector_pos[0], moon_vector_pos[1], moon_vector_pos[2]);
 		model = glm::mat4(1.f);
@@ -308,19 +262,36 @@ int main(int argc, char** argv)
 		model = glm::rotate(model, glm::radians(moonOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(moon_scale));
 
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-		glBindTexture(GL_TEXTURE_2D, moonTexture);
 		glBindVertexArray(sphereVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, moonTexture);
 		glDrawArrays(GL_TRIANGLES, 0, sphereVert.size()/8);
-		//glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
+		glBindTexture(GL_TEXTURE_2D, 0);
+		glBindVertexArray(0);
+
+		// ufo
+		glUseProgram(basicShaderProgram);
+
+		model = glm::mat4(1.f);
+		model = glm::translate(model, glm::vec3(earth_pos.x, earth_pos.y + 0.8f, earth_pos.z));
+		model = glm::scale(model, glm::vec3(earth_scale/10.f));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+
+		glBindVertexArray(ufoVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, ufoTexture);
+		glDrawArrays(GL_TRIANGLES, 0, ufoVert.size() / 8);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
 
 		// sphere - sun
-		glUseProgram(sphereShaderProgram);
+		glUseProgram(basicShaderProgram);
 
 		glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 		model = glm::mat4(1.f);
@@ -328,36 +299,17 @@ int main(int argc, char** argv)
 		model = glm::rotate(model, glm::radians(c.SUN_AXIAL_TILT), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(sun_scale));
 
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
+		glUniformMatrix4fv(glGetUniformLocation(basicShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
-		glBindTexture(GL_TEXTURE_2D, sunTexture);
 		glBindVertexArray(sphereVAO);
+		glActiveTexture(GL_TEXTURE0);
+		glBindTexture(GL_TEXTURE_2D, sunTexture);
 		glDrawArrays(GL_TRIANGLES, 0, sphereVert.size()/8);
-		//glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		glBindVertexArray(0);
 
-		// cube
-		//glUseProgram(cubeShaderProgram);
-
-		//glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-		//model = glm::mat4(1.f);
-		//model = glm::translate(model, sun_pos);
-		//model = glm::rotate(model, glm::radians(c.SUN_AXIAL_TILT), glm::vec3(0.f, 1.f, 0.f));
-		//model = glm::scale(model, glm::vec3(sun_scale));
-
-		//glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(model));
-		//glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(view));
-		//glUniformMatrix4fv(glGetUniformLocation(sphereShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
-
-		////glBindTexture(GL_TEXTURE_2D, sunTexture);
-		//glBindVertexArray(cubeVAO);
-		//glDrawArrays(GL_TRIANGLES, 0, cubeObj.subObjects[0].verticesIdx.size());
-		////glDrawElements(GL_TRIANGLES, sphere_indices.size(), GL_UNSIGNED_INT, nullptr);
-		//glBindTexture(GL_TEXTURE_2D, 0);
-		//glBindVertexArray(0);
 
 		// skybox
 		glDepthFunc(GL_LEQUAL);
@@ -368,30 +320,19 @@ int main(int argc, char** argv)
 		glUniformMatrix4fv(glGetUniformLocation(skyShaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 
 		glBindVertexArray(skyVAO);
+		glActiveTexture(GL_TEXTURE0);
 		glBindTexture(GL_TEXTURE_CUBE_MAP, cubemapTexture);
 		glDrawArrays(GL_TRIANGLES, 0, 36);
 		glBindVertexArray(0);
 		glDepthFunc(GL_LESS); // set depth function back to default
 
 		GLenum err;
-		while ((err = glGetError()) != GL_NO_ERROR)
-		{
-			cout << err << endl;
-		}
+		while ((err = glGetError()) != GL_NO_ERROR)	{ cout << "OpenGL Error Occured. Error Code: " << err << endl; }
 
 		// glfw: swap buffers and poll IO events (keys pressed/released, mouse moved etc.)
 		glfwSwapBuffers(window);
 		glfwPollEvents();
 	}
-
-	// optional clean up
-	//glDeleteVertexArrays(1, &sphereVAO);
-	//glDeleteVertexArrays(1, &skyVAO);
-
-	//glDeleteBuffers(1, &sphereVBO);
-	//glDeleteBuffers(1, &skyVBO);
-
-	//glDeleteBuffers(1, &sphereIBO);
 
 	glfwTerminate();
 	return 0;
@@ -431,63 +372,55 @@ void processMouse(GLFWwindow* window, double x, double y)
 	OrientCamera(Camera, dX, dY);
 }
 
-
-// load a texture with a filename
-// 
-// STBI_default = 0,
-// STBI_grey = 1,
-// STBI_grey_alpha = 2,
-// STBI_rgb = 3,
-// STBI_rgb_alpha = 4};
-unsigned int loadTexture(const char* filename, int stbi_enum)
+unsigned int loadTexture(const char* path)
 {
-	GLuint textureID;
+	unsigned int textureID;
 	glGenTextures(1, &textureID);
-	glBindTexture(GL_TEXTURE_2D, textureID);
 
-	int width, height, nrChannels;
+	int width, height, nrComponents;
 	stbi_set_flip_vertically_on_load(true);
-	unsigned char* data = stbi_load(filename, &width, &height, &nrChannels, stbi_enum);
-
+	unsigned char* data = stbi_load(path, &width, &height, &nrComponents, 0);
 	if (data)
 	{
-		
-		// if it contain alpha value
-		if (stbi_enum == STBI_rgb_alpha || stbi_enum == STBI_grey_alpha) 
-		{
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
-		}
-		else
-		{
-			glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
-		}		
+		GLenum format;
+		if (nrComponents == 1)
+			format = GL_RED;
+		else if (nrComponents == 3)
+			format = GL_RGB;
+		else if (nrComponents == 4)
+			format = GL_RGBA;
+
+		glBindTexture(GL_TEXTURE_2D, textureID);
+		glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
+		glGenerateMipmap(GL_TEXTURE_2D);
+
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+
+		stbi_image_free(data);
 	}
 	else
 	{
-		std::cout << "Cubemap texture failed to load at path: " << filename << std::endl;
+		std::cout << "Texture failed to load at path: " << path << std::endl;
+		stbi_image_free(data);
 	}
-	stbi_image_free(data);
-
-	glGenerateMipmap(GL_TEXTURE_2D);
-
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
 	return textureID;
 }
 
-unsigned int loadCubemap(const char* faces[6])
+// loads a cubemap texture from 6 individual texture faces
+unsigned int loadCubemap(vector<string> faces)
 {
 	unsigned int textureID;
 	glGenTextures(1, &textureID);
 	glBindTexture(GL_TEXTURE_CUBE_MAP, textureID);
 
 	int width, height, nrChannels;
-	for (unsigned int i = 0; i < 6; i++)
+	for (unsigned int i = 0; i < faces.size(); i++)
 	{
-		unsigned char* data = stbi_load(faces[i], &width, &height, &nrChannels, STBI_default);
+		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
 		if (data)
 		{
 			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
@@ -506,4 +439,36 @@ unsigned int loadCubemap(const char* faces[6])
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return textureID;
+}
+
+// ============ loading screen ===============
+
+void displayLoadingScreen(GLFWwindow* window)
+{
+	GLuint loadingTexture = loadTexture("myObjects/loading.png");
+	unsigned int loadingShaderProgram = LoadShader("load.vert", "load.frag");
+	unsigned int loadVAO, loadVBO;
+	glGenVertexArrays(1, &loadVAO);
+	glBindVertexArray(loadVAO);
+	glGenBuffers(1, &loadVBO);
+	glBindBuffer(GL_ARRAY_BUFFER, loadVBO);
+	glBufferData(GL_ARRAY_BUFFER, rectVert.size() * sizeof(float), &rectVert[0], GL_STATIC_DRAW);
+	glEnableVertexAttribArray(0);
+	glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+	glEnableVertexAttribArray(1);
+	glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+
+	glUseProgram(loadingShaderProgram);
+	glm::mat4 lsModel = glm::translate(glm::mat4(1.f), glm::vec3(0.f, 0.f, 0.f));
+	glm::mat4 lsView = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
+	glUniformMatrix4fv(glGetUniformLocation(loadingShaderProgram, "model"), 1, GL_FALSE, glm::value_ptr(lsModel));
+	glUniformMatrix4fv(glGetUniformLocation(loadingShaderProgram, "view"), 1, GL_FALSE, glm::value_ptr(lsView));
+
+	glBindVertexArray(loadVAO);
+	glActiveTexture(GL_TEXTURE0);
+	glBindTexture(GL_TEXTURE_2D, loadingTexture);
+	glDrawArrays(GL_TRIANGLES, 0, 6);
+	glBindTexture(GL_TEXTURE_2D, 0);
+	glBindVertexArray(0);
+	glfwSwapBuffers(window);
 }

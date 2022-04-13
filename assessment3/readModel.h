@@ -7,7 +7,6 @@
 #include <vector>
 #include <map>
 #include <stdexcept>
-#include <algorithm>
 
 struct Triple {
 	float x;
@@ -27,12 +26,13 @@ struct SubObj
 	std::string modelObjectName;
 	std::string useMaterial;
 	std::string smoothShadding;
-	FaceType attributeType;
 
 	std::vector<unsigned int> verticesIdx;
 	std::vector<unsigned int> textureMapIdx;
 	std::vector<unsigned int> normalsIdx;
+
 	std::vector<float> expandedVertices;
+	int expandedVertexLength;
 };
 
 struct WholeObj

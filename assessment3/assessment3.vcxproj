@@ -156,16 +156,15 @@
     <ClCompile Include="libraries\include\glad\glad.c" />
     <ClCompile Include="readModel.cpp" />
     <ClCompile Include="shapes.cpp" />
+    <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="circle.frag" />
-    <None Include="circle.vert" />
-    <None Include="cube.frag" />
-    <None Include="cube.vert" />
+    <None Include="load.frag" />
+    <None Include="load.vert" />
     <None Include="sky.frag" />
     <None Include="sky.vert" />
-    <None Include="sphere.frag" />
-    <None Include="sphere.vert" />
+    <None Include="basic.frag" />
+    <None Include="basic.vert" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="bitmap.h" />

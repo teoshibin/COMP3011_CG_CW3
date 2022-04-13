@@ -13,12 +13,18 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Source Files\vendor">
+      <UniqueIdentifier>{e19c1d8f-c19b-48bb-b5f9-03cd33da5a3b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\vendor">
+      <UniqueIdentifier>{a6c4c2ce-24bd-4b64-b865-d6ed37c41b18}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Resource Files\shaders">
+      <UniqueIdentifier>{f5d71044-e439-4400-9b8e-2235b8c186bf}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="assessment3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\include\glad\glad.c">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="shapes.cpp">
@@ -30,31 +36,31 @@
     <ClCompile Include="geoMetrics.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="stb_image.cpp">
+      <Filter>Source Files\vendor</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\include\glad\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="cube.frag">
-      <Filter>Source Files</Filter>
+    <None Include="load.vert">
+      <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="cube.vert">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="sky.vert">
-      <Filter>Source Files</Filter>
+    <None Include="load.frag">
+      <Filter>Resource Files\shaders</Filter>
     </None>
     <None Include="sky.frag">
-      <Filter>Source Files</Filter>
+      <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="circle.frag">
-      <Filter>Source Files</Filter>
+    <None Include="sky.vert">
+      <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="circle.vert">
-      <Filter>Source Files</Filter>
+    <None Include="basic.frag">
+      <Filter>Resource Files\shaders</Filter>
     </None>
-    <None Include="sphere.vert">
-      <Filter>Source Files</Filter>
-    </None>
-    <None Include="sphere.frag">
-      <Filter>Source Files</Filter>
+    <None Include="basic.vert">
+      <Filter>Resource Files\shaders</Filter>
     </None>
   </ItemGroup>
   <ItemGroup>
@@ -85,14 +91,14 @@
     <ClInclude Include="shapes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="stb_image.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="readModel.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="geoMetrics.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>Header Files\vendor</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

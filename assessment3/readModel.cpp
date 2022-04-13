@@ -249,7 +249,7 @@ void ObjFileReader::expandVertices(WholeObj& data)
 		vector<unsigned int>& nId = subObjI.normalsIdx;
 		
 		vector<float>& exVer = subObjI.expandedVertices;
-		
+						
 		for (int j = 0; j < vId.size(); j++)
 		{
 			// sequentially index index of vertex and use it to index vertex
