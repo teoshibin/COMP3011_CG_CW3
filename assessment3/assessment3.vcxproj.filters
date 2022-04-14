@@ -62,6 +62,12 @@
     <None Include="basic.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="illuminated.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="illuminated.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="camera.h">
