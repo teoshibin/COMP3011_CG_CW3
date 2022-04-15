@@ -95,11 +95,11 @@ float calculateAttenuation(Lighting l, vec3 fragPosition)
 float spotIllumination(Lighting l, vec3 normals, vec3 fragPosition)
 {
 	float cosPhi = cos(radians(l.phi));
-	vec3 fromLightDir = -normalize(l.position - fragPosition);
-	vec3 spotDir = normalize(l.direction);
+	vec3 fromLightDir = -normalize(l.position - fragPosition); // direction of fragment to light position
+	vec3 spotDir = normalize(l.direction); // direction of spot light center vector
 
-	float theta = dot(spotDir, fromLightDir);
-	if(theta > cosPhi)
+	float cosTheta = dot(spotDir, fromLightDir);
+	if(cosTheta > cosPhi)
 	{
 		return positionalIllumination(l, normals, fragPosition);
 	}

@@ -11,9 +11,11 @@
 #include "FlyThroughCamera.h"
 #include "shader.h"
 #include "window.h"
-#include "readModel.h"
+#include "modelReader.h"
 #include "shapes.h"
-#include "geoMetrics.h"
+#include "OrbitAnimator.h"
+#include "SceneState.h"
+#include "PlanetMath.h"
 
 using namespace std;
 
@@ -28,6 +30,9 @@ void glDrawVertexTriangles(unsigned int VAO, GLuint texture, int numberOfVertex)
 void glSetModelViewProjection(unsigned int shaderProgram, glm::mat4 model, glm::mat4 view, glm::mat4 projection);
 void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::vec3 camPos);
 
+glm::vec3 vecToVec3(vector<float> vec);
+vector<float> vec3ToVec(glm::vec3 vec3);
+
 // settings
 int WINDOW_WIDTH = 1280;
 int WINDOW_HEIGHT = 800;
@@ -38,10 +43,12 @@ bool firstMouse = true;
 float prevMouseX;
 float prevMouseY;
 
+// scene 
+SceneState sceneState;
+
 int main(int argc, char** argv)
 {
-	// ======================= SETUP ======================
-		
+	// ======================= SETUP ======================		
 	GLFWwindow* window = myCreateWindow(
 		WINDOW_WIDTH, WINDOW_HEIGHT, "Space Scene");	// create window
 	mySetWindowCenter(window);							// adjust window position
@@ -49,42 +56,60 @@ int main(int argc, char** argv)
 	glfwSetCursorPosCallback(window, processMouse);		// set mouse event callback
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress); // init glad
 
-	// ====================== OPENGL ======================
-		
+	// ====================== OPENGL ======================		
 	InitCamera(Camera);				// init camera
-	displayLoadingScreen(window);	// loading screen (this uses opengl code camera must be init before this)
+	displayLoadingScreen(window);	// loading screen (contains gl code)
 
-	// load objects
+	int startLoadingTime = (int)glfwGetTime(); // to calculate loading time
+
+
+	// ========= load objects =========
 	ObjFileReader ofr;
-	WholeObj sphereObj;
-	WholeObj ufoObj;
-	cout << "Loading Objects..." << endl;
+	ObjectFileData sphereObj, ufoObj;
+	cout << "Loading Objects...\n";
 	try
 	{
-		sphereObj = ofr.readObj("myObjects/sphere.obj");
-		ufoObj = ofr.readObj("myObjects/ufo_1.obj");
+		sphereObj = ofr.read("objects/solar_system/sphere.obj");
+		ufoObj = ofr.read("objects/ufo_1/ufo_1.obj");
 	}
 	catch (const std::exception& e)
 	{
-		cerr << "Fail to load object file" << endl;
+		cerr << "Fail to load object file\n";
 		cerr << e.what() << endl;
 		return -1;
 	}
 	vector<float> skyboxVert = getSkyboxCube();
 	vector<float>& sphereVert = sphereObj.subObjects[0].expandedVertices;
 	vector<float>& ufoVert = ufoObj.subObjects[0].expandedVertices;
-	cout << "Objects Loaded" << endl;
+	cout << "Objects Loaded\n\n";
 
-	// load shaders
+
+	// ======== load shaders =========
+	cout << "Loading Shaders...\n";
 	unsigned int illumShaderProgram = LoadShader("illuminated.vert", "illuminated.frag");
 	unsigned int basicShaderProgram = LoadShader("basic.vert", "basic.frag");
 	unsigned int skyShaderProgram = LoadShader("sky.vert", "sky.frag");
-	
-	// load all textures
-	GLuint earthTexture = loadTexture("myObjects/earth.png");
-	GLuint moonTexture = loadTexture("myObjects/moon.png");
-	GLuint sunTexture = loadTexture("myObjects/sun.png");
-	GLuint ufoTexture = loadTexture("myObjects/ufo_kd.jpg");
+	cout << "Shaders Loaded\n\n";
+
+	// ======= load all textures =======
+	cout << "Loading Textures...\n";
+	GLuint sunTexture = loadTexture("objects/solar_system/textures/2k_sun.jpg");	
+	GLuint mercuryTexture = loadTexture("objects/solar_system/textures/2k_mercury.jpg");
+	GLuint venusTexture = loadTexture("objects/solar_system/textures/2k_venus_surface.jpg");
+	GLuint venusAtmosphereTexture = loadTexture("objects/solar_system/textures/2k_venus_atmosphere.jpg");
+	GLuint earthTexture = loadTexture("objects/solar_system/textures/2k_earth_daymap.jpg");
+	GLuint earthNightTexture = loadTexture("objects/solar_system/textures/2k_earth_nightmap.jpg");
+	GLuint earthCloudsTexture = loadTexture("objects/solar_system/textures/2k_earth_clouds.jpg");
+	GLuint moonTexture = loadTexture("objects/solar_system/textures/2k_moon.jpg");	
+	GLuint marsTexture = loadTexture("objects/solar_system/textures/2k_mars.jpg");	
+	GLuint jupiterTexture = loadTexture("objects/solar_system/textures/2k_jupiter.jpg");	
+	GLuint saturnTexture = loadTexture("objects/solar_system/textures/2k_saturn.jpg");
+	GLuint saturnRingTexture = loadTexture("objects/solar_system/textures/2k_saturn_ring_alpha.png");
+	GLuint uranusTexture = loadTexture("objects/solar_system/textures/2k_uranus.jpg");
+	GLuint uranusRingTexture = loadTexture("objects/solar_system/textures/uranus_ring.jpg");	
+	GLuint neptuneTexture = loadTexture("objects/solar_system/textures/2k_neptune.jpg");
+	GLuint plutoTexture = loadTexture("objects/solar_system/textures/pluto.jpg");
+	GLuint ufoTexture = loadTexture("objects/ufo_1/ufo_kd.jpg");
 	vector<string> files = {
 		"skybox/right.jpg",
 		"skybox/left.jpg",
@@ -94,6 +119,11 @@ int main(int argc, char** argv)
 		"skybox/back.jpg"
 	};
 	GLuint skyTexture = loadCubemap(files);
+	cout << "Textures Loaded\n\n";
+
+
+	// ======= prepre scene rendering =======
+	cout << "Setting Up Scene...\n";
 
 	// gen buffers
 	unsigned int ufoVAO, ufoVBO;
@@ -112,45 +142,59 @@ int main(int argc, char** argv)
 
 	// =========== MODEL & ANIMATION CONFIG ==============
 	
-	UniversalConstants c;
-	
-	// model hyper params
-	float earth_scale = 1; // make earth smaller
-	float sun_scale_modifier = 0.03; // make sun smaller (not to actual scale)
-	float distance_modifier = 5; // (not to actual scale)
+	PlanetConstants c;
+	PlanetMath m;
 
 	// model constants
-	float sun_scale = c.SUN_RADIUS / c.EARTH_RADIUS * earth_scale * sun_scale_modifier;
-	float earth_to_sun_distance = sun_scale * distance_modifier; // using diameter of the sun
-	float moon_scale = c.MOON_RADIUS / c.EARTH_RADIUS * earth_scale;
-	float moon_to_earth_distance = earth_scale * distance_modifier;
+	float SPHERE_OBJECT_RADIUS = 2;		// 3d sphere radius designed in blender (do not change)
+	
+	// model hyper params				(tweak these to adjust scene)
+	
+	float earthScale = 1;				// make earth smaller
+	float sunScaleModifier = 0.03;		// specifically make sun smaller
+	float earthDistanceModifier = 1;	// orbit radius distance scale
+	float moonDistanceModifier = 1;
 
-	// animation hyper params
-	int precision = 2;
-	float earth_orbit_time_span = 480; // time for completing earth orbit animation in seconds
+	float sunScale = m.getRelativeScale(c.SUN_RADIUS, c.EARTH_RADIUS, earthScale, sunScaleModifier);
+	float moonScale = m.getRelativeScale(c.MOON_RADIUS, c.EARTH_RADIUS, earthScale);
 
-	// animation constants and objects
+	float earthOrbitRadius = m.getScaledRadiusDistance(sunScale, earthScale, SPHERE_OBJECT_RADIUS, earthDistanceModifier);
+	float moonOrbitRadius = m.getScaledRadiusDistance(earthScale, moonScale, SPHERE_OBJECT_RADIUS, moonDistanceModifier);
+
+	// animation hyper params			(tweak these to adjust scene animation)
+
+	int precision = 2;					// animation angle interpolation precision
+	float earth_orbit_time_span = 480;	// time for completing earth orbit animation in seconds (1yr = this amount of seconds)
 
 		// calculate moon time span using ratio (moon_tp / earth_tp) = (moon_orbital_earth_days / orbital_earth_days)
 	float moon_orbit_time_span = earth_orbit_time_span / c.EARTH_ORBITAL_PERIOD * c.MOON_EARTH_DAYS_ORBITAL_PERIOD;
 
 	OrbitAnimator earthOrbitor = OrbitAnimator(
-		earth_orbit_time_span, c.EARTH_ORBITAL_PERIOD, 1.5f, earth_to_sun_distance, c.EARTH_ECLIPTIC_INCLINATION);
+		earth_orbit_time_span, c.EARTH_ORBITAL_PERIOD, 1.5f, earthOrbitRadius, c.EARTH_ECLIPTIC_INCLINATION);
 
 	// note that the orbital period unit we're using here is the moon day not earth day
 	// moon got the same rotation and orbit period so the same side will always be facing earth
 	OrbitAnimator moonOrbitor = OrbitAnimator(
-		moon_orbit_time_span, c.MOON_MOON_DAYS_ORBITAL_PERIOD, 1.1f, moon_to_earth_distance, c.MOON_ECLIPTIC_INCLINATION);
+		moon_orbit_time_span, c.MOON_MOON_DAYS_ORBITAL_PERIOD, 1.1f, moonOrbitRadius, c.MOON_ECLIPTIC_INCLINATION);
 
+	glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 earth_pos, moon_pos;
+
+	float ms_time = (float)glfwGetTime() * 1000;	
+	earthOrbitor.animate(ms_time, precision, precision);
+	earth_pos = vecToVec3(earthOrbitor.getOrbitPosition());
+	moonOrbitor.animate(vec3ToVec(earth_pos), ms_time, precision, precision);
+	moon_pos = vecToVec3(moonOrbitor.getOrbitPosition());
 
 	// ==================== RENDER LOOP =========================
 
 	glUseProgram(skyShaderProgram);
 	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // set texture to 0
-	
-	glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::vec3 earth_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::vec3 moon_pos = glm::vec3(0.0f, 0.0f, 0.0f);
+
+	cout << "Scene Set up\n";
+	cout << "\nLoading Time: " << (int)glfwGetTime() - startLoadingTime << "s\n\n";
+
+	sceneState.pauseScene(glfwGetTime());
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -158,11 +202,14 @@ int main(int argc, char** argv)
 		processKeyboard(window);
 
 		// animations calculations
-		float ms_time = (float) glfwGetTime() * 1000;
-		earthOrbitor.animate(ms_time, precision, precision);
-		vector<float> earth_vector_pos = earthOrbitor.getOrbitPosition();
-		moonOrbitor.animate(earth_vector_pos, ms_time, precision, precision);
-		vector<float> moon_vector_pos = moonOrbitor.getOrbitPosition();
+		if (!sceneState.getPause())
+		{
+			ms_time = (float)sceneState.getMsPlayTime(glfwGetTime());
+			earthOrbitor.animate(ms_time, precision, precision);
+			earth_pos = vecToVec3(earthOrbitor.getOrbitPosition());
+			moonOrbitor.animate(vec3ToVec(earth_pos), ms_time, precision, precision);
+			moon_pos = vecToVec3(moonOrbitor.getOrbitPosition());
+		}
 
 		// render
 		glClearColor(0.f, 0.f, 0.f, 1.f);
@@ -182,30 +229,28 @@ int main(int argc, char** argv)
 		model = glm::mat4(1.f);
 		model = glm::translate(model, sun_pos);
 		model = glm::rotate(model, glm::radians(c.SUN_AXIAL_TILT), glm::vec3(0.f, 1.f, 0.f));
-		model = glm::scale(model, glm::vec3(sun_scale));
+		model = glm::scale(model, glm::vec3(sunScale));
 		glSetModelViewProjection(basicShaderProgram, model, view, projection);
 		glDrawVertexTriangles(sphereVAO, sunTexture, sphereVert.size() / 8);
 
 		// sphere - earth
 		glUseProgram(illumShaderProgram);
-		earth_pos = glm::vec3(earth_vector_pos[0], earth_vector_pos[1], earth_vector_pos[2]);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, earth_pos);
 		model = glm::rotate(model, glm::radians(c.EARTH_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::rotate(model, glm::radians(earthOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
-		model = glm::scale(model, glm::vec3(earth_scale));
+		model = glm::scale(model, glm::vec3(earthScale));
 		glSetLightingConfig(illumShaderProgram, sun_pos, Camera.Position);
 		glSetModelViewProjection(illumShaderProgram, model, view, projection);
 		glDrawVertexTriangles(sphereVAO, earthTexture, sphereVert.size() / 8);
 
 		// sphere - moon
 		glUseProgram(illumShaderProgram);
-		moon_pos = glm::vec3(moon_vector_pos[0], moon_vector_pos[1], moon_vector_pos[2]);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, moon_pos);
 		model = glm::rotate(model, glm::radians(c.MOON_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::rotate(model, glm::radians(moonOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
-		model = glm::scale(model, glm::vec3(moon_scale));
+		model = glm::scale(model, glm::vec3(moonScale));
 		glSetLightingConfig(illumShaderProgram, sun_pos, Camera.Position);
 		glSetModelViewProjection(illumShaderProgram, model, view, projection);
 		glDrawVertexTriangles(sphereVAO, moonTexture, sphereVert.size() / 8);
@@ -213,14 +258,14 @@ int main(int argc, char** argv)
 		// ufo
 		glUseProgram(illumShaderProgram);
 		model = glm::mat4(1.f);
-		model = glm::translate(model, glm::vec3(earth_pos.x, earth_pos.y + earth_scale*2, earth_pos.z));
-		model = glm::scale(model, glm::vec3(earth_scale/10.f));
+		model = glm::translate(model, glm::vec3(earth_pos.x, earth_pos.y + earthScale*2, earth_pos.z));
+		model = glm::scale(model, glm::vec3(earthScale/10.f));
 		glSetLightingConfig(illumShaderProgram, sun_pos, Camera.Position);
 		glSetModelViewProjection(illumShaderProgram, model, view, projection);
 		glDrawVertexTriangles(ufoVAO, ufoTexture, ufoVert.size() / 8);
 
 
-		// skybox
+		// skybox (contains gl code)
 		displaySkyBox(skyVAO, skyTexture, skyShaderProgram, view, projection);
 
 		// return errors if there's any
@@ -240,8 +285,10 @@ int main(int argc, char** argv)
 
 void processKeyboard(GLFWwindow* window)
 {
+	// window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)		glfwSetWindowShouldClose(window, true);
 
+	// camera
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)			MoveCamera(Camera, SCamera::FORWARD);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)			MoveCamera(Camera, SCamera::BACKWARD);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)			MoveCamera(Camera, SCamera::LEFT);
@@ -252,6 +299,10 @@ void processKeyboard(GLFWwindow* window)
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS) Camera.FOV -= 0.05f;
 	if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS) Camera.FOV += 0.05f;
+
+	// scene
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) sceneState.pauseScene(glfwGetTime());
+
 }
 
 void processMouse(GLFWwindow* window, double x, double y)
@@ -347,7 +398,7 @@ unsigned int loadCubemap(vector<string> faces)
 void displayLoadingScreen(GLFWwindow* window)
 {
 	vector<float> rectVert = getRectangle();
-	GLuint loadingTexture = loadTexture("myObjects/loading.png");
+	GLuint loadingTexture = loadTexture("objects/loading_screen/loading.png");
 	unsigned int loadingShaderProgram = LoadShader("load.vert", "load.frag");
 	unsigned int loadVAO, loadVBO;
 	glSetupVertexObject(loadVAO, loadVBO, rectVert, vector<int>{3, 2});
@@ -426,11 +477,21 @@ void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::ve
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light.position"), 1, &lightPos[0]);
 	glUniform3f(glGetUniformLocation(shaderProgram, "light.color"), 1.f, 1.f, 1.f);
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light.camPos"), 1, &camPos[0]);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.ambientStrength"), 0.25f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.specularStrength"), 0.4f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.shininess"), 8.f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light.ambientStrength"), 0.2f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light.specularStrength"), 0.3f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light.shininess"), 16.f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.constant"), 1.0f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.linear"), 0.007f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.quadratic"), 0.0002f);
 	//glUniform1f(glGetUniformLocation(shaderProgram, "light.phi"), 15.f);
+}
+
+glm::vec3 vecToVec3(vector<float> vec)
+{
+	return glm::vec3(vec[0], vec[1], vec[2]);
+}
+
+vector<float> vec3ToVec(glm::vec3 vec3)
+{
+	return vector<float>{vec3.x, vec3.y, vec3.z};
 }

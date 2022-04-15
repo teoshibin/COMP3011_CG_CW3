@@ -152,9 +152,11 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="assessment3.cpp" />
-    <ClCompile Include="geoMetrics.cpp" />
+    <ClCompile Include="OrbitAnimator.cpp" />
     <ClCompile Include="libraries\include\glad\glad.c" />
-    <ClCompile Include="readModel.cpp" />
+    <ClCompile Include="modelReader.cpp" />
+    <ClCompile Include="PlanetMath.cpp" />
+    <ClCompile Include="SceneState.cpp" />
     <ClCompile Include="shapes.cpp" />
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
@@ -172,9 +174,11 @@
     <ClInclude Include="bitmap.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="FlyThroughCamera.h" />
-    <ClInclude Include="geoMetrics.h" />
+    <ClInclude Include="OrbitAnimator.h" />
     <ClInclude Include="ModelViewerCamera.h" />
-    <ClInclude Include="readModel.h" />
+    <ClInclude Include="modelReader.h" />
+    <ClInclude Include="PlanetMath.h" />
+    <ClInclude Include="SceneState.h" />
     <ClInclude Include="shader.h" />
     <ClInclude Include="shapes.h" />
     <ClInclude Include="stb_image.h" />
