@@ -142,7 +142,6 @@ int main(int argc, char** argv)
 
 	// =========== MODEL & ANIMATION CONFIG ==============
 	
-	PlanetConstants c;
 	PlanetMath m;
 
 	// model constants
@@ -152,11 +151,11 @@ int main(int argc, char** argv)
 	
 	float earthScale = 1;				// make earth smaller
 	float sunScaleModifier = 0.03;		// specifically make sun smaller
-	float earthDistanceModifier = 1;	// orbit radius distance scale
-	float moonDistanceModifier = 1;
+	float earthDistanceModifier = 3;	// orbit radius distance scale
+	float moonDistanceModifier = 2;
 
-	float sunScale = m.getRelativeScale(c.SUN_RADIUS, c.EARTH_RADIUS, earthScale, sunScaleModifier);
-	float moonScale = m.getRelativeScale(c.MOON_RADIUS, c.EARTH_RADIUS, earthScale);
+	float sunScale = m.getRelativeValue(PConst::SUN_RADIUS, PConst::EARTH_RADIUS, earthScale, sunScaleModifier);
+	float moonScale = m.getRelativeValue(PConst::MOON_RADIUS, PConst::EARTH_RADIUS, earthScale);
 
 	float earthOrbitRadius = m.getScaledRadiusDistance(sunScale, earthScale, SPHERE_OBJECT_RADIUS, earthDistanceModifier);
 	float moonOrbitRadius = m.getScaledRadiusDistance(earthScale, moonScale, SPHERE_OBJECT_RADIUS, moonDistanceModifier);
@@ -164,18 +163,17 @@ int main(int argc, char** argv)
 	// animation hyper params			(tweak these to adjust scene animation)
 
 	int precision = 2;					// animation angle interpolation precision
-	float earth_orbit_time_span = 480;	// time for completing earth orbit animation in seconds (1yr = this amount of seconds)
+	float earthOrbitDelay = 480;		// time for completing earth orbit animation in seconds (1yr = this amount of seconds)
 
-		// calculate moon time span using ratio (moon_tp / earth_tp) = (moon_orbital_earth_days / orbital_earth_days)
-	float moon_orbit_time_span = earth_orbit_time_span / c.EARTH_ORBITAL_PERIOD * c.MOON_EARTH_DAYS_ORBITAL_PERIOD;
-
-	OrbitAnimator earthOrbitor = OrbitAnimator(
-		earth_orbit_time_span, c.EARTH_ORBITAL_PERIOD, 1.5f, earthOrbitRadius, c.EARTH_ECLIPTIC_INCLINATION);
+	// calculate moon time span using ratio earthDelay / moonDelay = moonOrbitEarthDays / earthOrbitEarthDays
+	float moon_orbit_time_span = m.getRelativeValue(PConst::MOON_EARTH_DAY_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
 
 	// note that the orbital period unit we're using here is the moon day not earth day
 	// moon got the same rotation and orbit period so the same side will always be facing earth
-	OrbitAnimator moonOrbitor = OrbitAnimator(
-		moon_orbit_time_span, c.MOON_MOON_DAYS_ORBITAL_PERIOD, 1.1f, moonOrbitRadius, c.MOON_ECLIPTIC_INCLINATION);
+	OrbitAnimator earthOrbitor = OrbitAnimator(earthOrbitDelay, PConst::EARTH_ORBITAL_PERIOD,
+		1.5f, earthOrbitRadius, PConst::EARTH_ECLIPTIC_INCLINATION);
+	OrbitAnimator moonOrbitor = OrbitAnimator(moon_orbit_time_span, PConst::MOON_SELF_DAY_ORBITAL_PERIOD,
+		1.1f, moonOrbitRadius, PConst::MOON_ECLIPTIC_INCLINATION);
 
 	glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
 	glm::vec3 earth_pos, moon_pos;
@@ -228,7 +226,7 @@ int main(int argc, char** argv)
 		glUseProgram(basicShaderProgram);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, sun_pos);
-		model = glm::rotate(model, glm::radians(c.SUN_AXIAL_TILT), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(PConst::SUN_AXIAL_TILT), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(sunScale));
 		glSetModelViewProjection(basicShaderProgram, model, view, projection);
 		glDrawVertexTriangles(sphereVAO, sunTexture, sphereVert.size() / 8);
@@ -237,7 +235,7 @@ int main(int argc, char** argv)
 		glUseProgram(illumShaderProgram);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, earth_pos);
-		model = glm::rotate(model, glm::radians(c.EARTH_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::rotate(model, glm::radians(PConst::EARTH_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::rotate(model, glm::radians(earthOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(earthScale));
 		glSetLightingConfig(illumShaderProgram, sun_pos, Camera.Position);
@@ -248,7 +246,7 @@ int main(int argc, char** argv)
 		glUseProgram(illumShaderProgram);
 		model = glm::mat4(1.f);
 		model = glm::translate(model, moon_pos);
-		model = glm::rotate(model, glm::radians(c.MOON_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
+		model = glm::rotate(model, glm::radians(PConst::MOON_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
 		model = glm::rotate(model, glm::radians(moonOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
 		model = glm::scale(model, glm::vec3(moonScale));
 		glSetLightingConfig(illumShaderProgram, sun_pos, Camera.Position);
