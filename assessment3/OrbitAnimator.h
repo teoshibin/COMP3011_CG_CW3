@@ -22,53 +22,38 @@ public:
 
 	// Essential Math input
 
-	// get time duration of completing full orbit of the sun
 	float getOrbitalDelay();
-	// set time duration in seconds for completing full orbit of the sun
 	void setOrbitalDelay(float seconds);
 
-	// get total of days for one full orbit
 	float getOrbitalDays();
-	// set total of days for one full orbit
 	void setOrbitalDays(float days);
 
 	// Animation Values
 
-	// get current day cycle angle
 	float getSpinAngle();
-	// set current day cycle angle
 	void setSpinAngle(float degrees);
 
-	// get current orbit degrees angle that is used for orbit position calculation
 	float getOrbitAngle();
-	// set current orbit degrees angle that is used for orbit position calculation
+	void addOrbitAngle(float degress);
 	void setOrbitAngle(float degrees);
 
-	// get calculated orbit position
 	std::vector<float> getOrbitPosition();
-	// set orbit position
 	void setOrbitPosition(float x, float y, float z);
 
 	// Cosmetics
 
-	// get orbit ratio for major radius axis
+	
 	float getOvalRatio();
-	// set orbit ratio for major radius axis
 	void setOvalRatio(float ratio);
 
-	// set distance of edge to center
 	void setOrbitRadius(float radius);
-	// get distance of edge to center
 	float getOrbitRadius();
 
-	// set distance of edge to center
 	void setOrbitTilt(float degrees);
-	// get distance of edge to center
 	float getOrbitTilt();
 
 	// Public Methods
 
-	// animate
 	void animate(float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision, bool force = false);
 	void animate(std::vector<float> orbit_origin, float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision, bool force = false);
 

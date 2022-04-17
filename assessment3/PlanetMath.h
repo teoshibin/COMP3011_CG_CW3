@@ -101,28 +101,54 @@ namespace PConst
 }
 #endif
 
-struct AnimatedBody
+struct BodyConst
 {
 	float radius;
 	float orbitalPeriod;
 	float localOrbitalPeriod;
 	float ascendingNode;
 	float inclination;
-	float axialTilt;
+	float axialTilt;	
 };
 
-struct AnimatedBodies
+struct RenderedBody
 {
-	std::map<std::string, int> indexKeyMap;
-	//std::map<int, std::string> indexValMap;
-	std::vector<AnimatedBody> bodies;
+	float bodyConstantIdx = -1;
+
+	int animatorIndex = -1;
+	float scale = 1;
+	float scaleModifier = 1;
+	float distanceMargin = 0;
+	float orbitRadius = 0;
+	float ovalRatio = 1;
+
+	int orbitParentIdx = -1;
+	std::vector<float> position;
 };
 
 class PlanetMath
 {
 public:
-	AnimatedBodies getSolarSystemBodies();
+	std::vector<BodyConst> getSolarSystemConstants();
+	int getPlanet(std::string name);
 	float getRelativeValue(float a1, float b1, float b2);
 	float getRelativeValue(float a1, float b1, float b2, float r);
+	float getMarginedRadius(float radiusA, float radiusB, float marginB, float modifierB);
+	bool findEqual(std::vector<float> values, float value);
 	//std::vector<float> batchGetRelativeValue(std::vector<float> as1, float bs1, float bs2);
+private:
+	std::map < std::string, int> keyMap
+	{
+		{"sun",		1},
+		{"mercury",	2},
+		{"venus",	3},
+		{"earth",	4},
+		{"mars",	5},
+		{"jupiter",	6},
+		{"saturn",	7},
+		{"uranus",	8},
+		{"neptune",	9},
+		{"pluto",	10},
+		{"moon",	11},
+	};
 };

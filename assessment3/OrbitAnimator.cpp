@@ -40,6 +40,11 @@ float OrbitAnimator::getOrbitalDelay() { return orbital_delay; }
 void OrbitAnimator::setOrbitAngle(float degrees) { orbit_angle = degrees; }
 float OrbitAnimator::getOrbitAngle() { return orbit_angle; }
 
+void OrbitAnimator::addOrbitAngle(float degress)
+{
+	orbit_angle += degress;
+}
+
 void OrbitAnimator::setSpinAngle(float degrees) { spin_angle = degrees; }
 float OrbitAnimator::getSpinAngle() { return spin_angle; }
 

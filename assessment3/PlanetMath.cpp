@@ -9,54 +9,39 @@
 //	return r;
 //}
 
-AnimatedBodies PlanetMath::getSolarSystemBodies()
+std::vector<BodyConst> PlanetMath::getSolarSystemConstants()
 {
-	AnimatedBodies bodies;
-
-	std::map < std::string, int> keyMap
-	{
-		{"mercury",	1},
-		{"venus",	2},
-		{"earth",	3},
-		{"moon",	4},
-		{"mars",	5},
-		{"jupiter",	6},
-		{"saturn",	7},
-		{"uranus",	8},
-		{"neptune",	9},
-		{"pluto",	10},
-	};
-	bodies.indexKeyMap = keyMap;
+	std::vector<BodyConst> animBodies(11);
 	
-	std::vector<AnimatedBody> animBodies(10);
-	
-	animBodies[0].radius = PConst::MERCURY_RADIUS;
-	animBodies[0].orbitalPeriod = PConst::MERCURY_ORBITAL_PERIOD;
-	animBodies[0].localOrbitalPeriod = PConst::MERCURY_LOCAL_ORBITAL_PERIOD;
-	animBodies[0].ascendingNode = PConst::MERCURY_ASCENDING_NODE;
-	animBodies[0].inclination = PConst::MERCURY_INCLINATION;
-	animBodies[0].axialTilt = PConst::MERCURY_AXIAL_TILT;
+	// bodies that orbit the sun
 
-	animBodies[1].radius = PConst::VENUS_RADIUS;
-	animBodies[1].orbitalPeriod = PConst::VENUS_ORBITAL_PERIOD;
-	animBodies[1].localOrbitalPeriod = PConst::VENUS_LOCAL_ORBITAL_PERIOD;
-	animBodies[1].ascendingNode = PConst::VENUS_ASCENDING_NODE;
-	animBodies[1].inclination = PConst::VENUS_INCLINATION;
-	animBodies[1].axialTilt = PConst::VENUS_AXIAL_TILT;
-	
-	animBodies[2].radius = PConst::EARTH_RADIUS;
-	animBodies[2].orbitalPeriod = PConst::EARTH_ORBITAL_PERIOD;
-	animBodies[2].localOrbitalPeriod = INFINITY;
-	animBodies[2].ascendingNode = PConst::EARTH_ASCENDING_NODE;
-	animBodies[2].inclination = PConst::EARTH_INCLINATION;
-	animBodies[2].axialTilt = PConst::EARTH_AXIAL_TILT;
+	animBodies[0].radius = PConst::SUN_RADIUS;
+	animBodies[0].orbitalPeriod = INFINITY;
+	animBodies[0].localOrbitalPeriod = INFINITY;
+	animBodies[0].ascendingNode = INFINITY;
+	animBodies[0].inclination = INFINITY;
+	animBodies[0].axialTilt = PConst::SUN_AXIAL_TILT;
 
-	animBodies[3].radius = PConst::MOON_RADIUS;
-	animBodies[3].orbitalPeriod = PConst::MOON_ORBITAL_PERIOD;
-	animBodies[3].localOrbitalPeriod = PConst::MOON_LOCAL_ORBITAL_PERIOD;
-	animBodies[3].ascendingNode = INFINITY;
-	animBodies[3].inclination = PConst::MOON_INCLINATION;
-	animBodies[3].axialTilt = PConst::MOON_AXIAL_TILT;
+	animBodies[1].radius = PConst::MERCURY_RADIUS;
+	animBodies[1].orbitalPeriod = PConst::MERCURY_ORBITAL_PERIOD;
+	animBodies[1].localOrbitalPeriod = PConst::MERCURY_LOCAL_ORBITAL_PERIOD;
+	animBodies[1].ascendingNode = PConst::MERCURY_ASCENDING_NODE;
+	animBodies[1].inclination = PConst::MERCURY_INCLINATION;
+	animBodies[1].axialTilt = PConst::MERCURY_AXIAL_TILT;
+
+	animBodies[2].radius = PConst::VENUS_RADIUS;
+	animBodies[2].orbitalPeriod = PConst::VENUS_ORBITAL_PERIOD;
+	animBodies[2].localOrbitalPeriod = PConst::VENUS_LOCAL_ORBITAL_PERIOD;
+	animBodies[2].ascendingNode = PConst::VENUS_ASCENDING_NODE;
+	animBodies[2].inclination = PConst::VENUS_INCLINATION;
+	animBodies[2].axialTilt = PConst::VENUS_AXIAL_TILT;
+	
+	animBodies[3].radius = PConst::EARTH_RADIUS;
+	animBodies[3].orbitalPeriod = PConst::EARTH_ORBITAL_PERIOD;
+	animBodies[3].localOrbitalPeriod = INFINITY;
+	animBodies[3].ascendingNode = PConst::EARTH_ASCENDING_NODE;
+	animBodies[3].inclination = PConst::EARTH_INCLINATION;
+	animBodies[3].axialTilt = PConst::EARTH_AXIAL_TILT;
 
 	animBodies[4].radius = PConst::MARS_RADIUS;
 	animBodies[4].orbitalPeriod = PConst::MARS_ORBITAL_PERIOD;
@@ -100,8 +85,21 @@ AnimatedBodies PlanetMath::getSolarSystemBodies()
 	animBodies[9].inclination = PConst::PLUTO_INCLINATION;
 	animBodies[9].axialTilt = PConst::PLUTO_AXIAL_TILT;
 
-	bodies.bodies = animBodies;
-	return bodies;
+	// bodies orbiting others
+
+	animBodies[10].radius = PConst::MOON_RADIUS;
+	animBodies[10].orbitalPeriod = PConst::MOON_ORBITAL_PERIOD;
+	animBodies[10].localOrbitalPeriod = PConst::MOON_LOCAL_ORBITAL_PERIOD;
+	animBodies[10].ascendingNode = INFINITY;
+	animBodies[10].inclination = PConst::MOON_INCLINATION;
+	animBodies[10].axialTilt = PConst::MOON_AXIAL_TILT;
+
+	return animBodies;
+}
+
+int PlanetMath::getPlanet(std::string name)
+{
+	return keyMap[name] - 1;
 }
 
 /// <summary>
@@ -127,6 +125,24 @@ float PlanetMath::getRelativeValue(float a1, float b1, float b2, float r)
 {
 	return a1 / b1 * b2 * r;
 }
+
+float PlanetMath::getMarginedRadius(float radiusA, float radiusB, float marginB, float modifierB)
+{
+	return 0.0f;
+}
+
+bool PlanetMath::findEqual(std::vector<float> values, float value)
+{
+	for (int j = 0; j < values.size(); j++)
+	{
+		if (values[j] == value)
+		{
+			return true;
+		}
+	}
+	return false;
+}
+
 
 //std::vector<float> PlanetMath::batchGetRelativeValue(std::vector<float> as1, float bs1, float bs2)
 //{
