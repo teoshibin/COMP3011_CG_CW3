@@ -26,14 +26,14 @@ OrbitAnimator::OrbitAnimator(float orbitalDelay, float orbitalDays, float ovalRa
 void OrbitAnimator::setOrbitalDays(float days) 
 { 
 	orbital_days = days; 
-	updateDelays();
+	initDelays();
 }
 float OrbitAnimator::getOrbitalDays() { return orbital_days; }
 
 void OrbitAnimator::setOrbitalDelay(float seconds)
 { 
 	orbital_delay = seconds; 
-	updateDelays();
+	initDelays();
 }
 float OrbitAnimator::getOrbitalDelay() { return orbital_delay; }
 
@@ -60,20 +60,20 @@ void OrbitAnimator::setOrbitPosition(float x, float y, float z)
 }
 std::vector<float> OrbitAnimator::getOrbitPosition() { return orbit_position; }
 
-void OrbitAnimator::animate(float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision)
+void OrbitAnimator::animate(float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision, bool force)
 {
 	std::vector<float> orbit_origin{ 0.f,0.f,0.f };
 	OrbitAnimator::updateSpin(current_ms_time, spin_angle_precision);
-	OrbitAnimator::updateOrbit(orbit_origin, current_ms_time, orbit_angle_precision);
+	OrbitAnimator::updateOrbit(orbit_origin, current_ms_time, orbit_angle_precision, force);
 }
 
-void OrbitAnimator::animate(std::vector<float> orbit_origin, float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision)
+void OrbitAnimator::animate(std::vector<float> orbit_origin, float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision, bool force)
 {
 	OrbitAnimator::updateSpin(current_ms_time, spin_angle_precision);
-	OrbitAnimator::updateOrbit(orbit_origin, current_ms_time, orbit_angle_precision);
+	OrbitAnimator::updateOrbit(orbit_origin, current_ms_time, orbit_angle_precision, force);
 }
 
-void OrbitAnimator::updateDelays()
+void OrbitAnimator::initDelays()
 {
 	delay_per_orbit_angle = orbital_delay / 360;	// delay for every orbit angle change in seconds
 	delay_per_day = orbital_delay / orbital_days;	// delay for a day in seconds (intermediate calculation)
@@ -85,9 +85,9 @@ void OrbitAnimator::updateSpin(float current_ms_time, unsigned int precision)
 	stepAngle(current_ms_time, &previous_spin_timestamp, delay_per_spin_angle, precision, &spin_angle);
 }
 
-void OrbitAnimator::updateOrbit(std::vector<float> orbit_origin, float current_ms_time, unsigned int precision)
+void OrbitAnimator::updateOrbit(std::vector<float> orbit_origin, float current_ms_time, unsigned int precision, bool force)
 {
-	if (stepAngle(current_ms_time, &previous_orbit_timestamp, delay_per_orbit_angle, precision, &orbit_angle))
+	if (stepAngle(current_ms_time, &previous_orbit_timestamp, delay_per_orbit_angle, precision, &orbit_angle) || force)
 	{
 		float x = (sin(DEG2RAD(orbit_angle)) * orbit_radius * oval_ratio);
 		float y = (tan(DEG2RAD(orbit_tilt)) * x);

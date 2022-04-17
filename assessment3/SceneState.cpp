@@ -5,10 +5,10 @@ SceneState::SceneState(float newPauseDelay)
 	pauseDelay = newPauseDelay;
 }
 
-void SceneState::pauseScene(double time)
+void SceneState::pauseScene(double time, bool force)
 {
 	double pausedTime = time - pauseTriggerTime;
-	if (pausedTime > pauseDelay)
+	if (pausedTime > pauseDelay || force)
 	{
 		pauseTriggerTime = time;
 		pause = !pause;
@@ -31,4 +31,9 @@ double SceneState::getMsPlayTime(double time)
 bool SceneState::getPause()
 {
 	return pause;
+}
+
+void SceneState::addSPlayTime(double s)
+{
+	totalPausedTime += s;
 }

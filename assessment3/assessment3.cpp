@@ -33,6 +33,8 @@ void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::ve
 glm::vec3 vecToVec3(vector<float> vec);
 vector<float> vec3ToVec(glm::vec3 vec3);
 
+//void updateAnimatorsDelays(vector<OrbitAnimator&> animators);
+
 // settings
 int WINDOW_WIDTH = 1280;
 int WINDOW_HEIGHT = 800;
@@ -45,9 +47,12 @@ float prevMouseY;
 
 // scene 
 SceneState sceneState;
+//vector<OrbitAnimator&> animators;
+float earthOrbitDelay = 100;
 
 int main(int argc, char** argv)
 {
+
 	// ======================= SETUP ======================		
 	GLFWwindow* window = myCreateWindow(
 		WINDOW_WIDTH, WINDOW_HEIGHT, "Space Scene");	// create window
@@ -149,40 +154,107 @@ int main(int argc, char** argv)
 	
 	// model hyper params				(tweak these to adjust scene)
 	
-	float earthScale = 1;				// make earth smaller
-	float sunScaleModifier = 0.03;		// specifically make sun smaller
-	float earthDistanceModifier = 3;	// orbit radius distance scale
-	float moonDistanceModifier = 2;
+	float distanceModifier = 10;			// master distance margin scale
+	float earthScale = 4;				// master scale
+
+	float sunScaleModifier = 0.5;		// specifically adjust body size
+	float mercuryScaleModifier = 1;
+	float venusScaleModifier = 1;
+	float moonScaleModifier = 1;
+	float marsScaleModifier = 1;
+	float jupiterScaleModifier = 0.5;
+	float saturnScaleModifier = 0.5;
+	float uranusScaleModifier = 1;
+	float neptuneScaleModifier = 1;
+	float plutoScaleModifier = 1;
+
+	float mercuryDistanceMargin = 10;	// set all to 0 will make them line up and touching each other
+	float venusDistanceMargin	= 10;    // (added distance)
+	float earthDistanceMargin	= 10;
+	float moonDistanceMargin = 2;
+	float marsDistanceMargin = 10;
+	float jupiterDistanceMargin = 80;
+	float saturnDistanceMargin = 80;
+	float uranusDistanceMargin = 120;
+	float neptuneDistanceMargin = 100;
+	float plutoDistanceMargin	= 60;
+
+	// compute scale relative to earth
 
 	float sunScale = m.getRelativeValue(PConst::SUN_RADIUS, PConst::EARTH_RADIUS, earthScale, sunScaleModifier);
-	float moonScale = m.getRelativeValue(PConst::MOON_RADIUS, PConst::EARTH_RADIUS, earthScale);
+	float mercuryScale = m.getRelativeValue(PConst::MERCURY_RADIUS, PConst::EARTH_RADIUS, earthScale, mercuryScaleModifier);
+	float venusScale = m.getRelativeValue(PConst::VENUS_RADIUS, PConst::EARTH_RADIUS, earthScale, venusScaleModifier);
+	float moonScale = m.getRelativeValue(PConst::MOON_RADIUS, PConst::EARTH_RADIUS, earthScale, moonScaleModifier);
+	float marsScale = m.getRelativeValue(PConst::MARS_RADIUS, PConst::EARTH_RADIUS, earthScale, marsScaleModifier);
+	float jupiterScale = m.getRelativeValue(PConst::JUPITER_RADIUS, PConst::EARTH_RADIUS, earthScale, jupiterScaleModifier);
+	float saturnScale = m.getRelativeValue(PConst::SATURN_RADIUS, PConst::EARTH_RADIUS, earthScale, saturnScaleModifier);
+	float uranusScale = m.getRelativeValue(PConst::URANUS_RADIUS, PConst::EARTH_RADIUS, earthScale, uranusScaleModifier);
+	float neptuneScale = m.getRelativeValue(PConst::NEPTUNE_RADIUS, PConst::EARTH_RADIUS, earthScale, neptuneScaleModifier);
+	float plutoScale = m.getRelativeValue(PConst::PLUTO_RADIUS, PConst::EARTH_RADIUS, earthScale, plutoScaleModifier);
 
-	float earthOrbitRadius = m.getScaledRadiusDistance(sunScale, earthScale, SPHERE_OBJECT_RADIUS, earthDistanceModifier);
-	float moonOrbitRadius = m.getScaledRadiusDistance(earthScale, moonScale, SPHERE_OBJECT_RADIUS, moonDistanceModifier);
+	// compute virtual radius
 
+	float sunRadius = sunScale * SPHERE_OBJECT_RADIUS;
+	float mercuryRadius = mercuryScale * SPHERE_OBJECT_RADIUS;
+	float venusRadius = venusScale * SPHERE_OBJECT_RADIUS;
+	float earthRadius = earthScale * SPHERE_OBJECT_RADIUS;
+	float moonRadius = moonScale * SPHERE_OBJECT_RADIUS;
+	float marsRadius = marsScale * SPHERE_OBJECT_RADIUS;
+	float jupiterRadius = jupiterScale * SPHERE_OBJECT_RADIUS;
+	float saturnRadius = saturnScale * SPHERE_OBJECT_RADIUS;
+	float uranusRadius = uranusScale * SPHERE_OBJECT_RADIUS;
+	float neptuneRadius = neptuneScale * SPHERE_OBJECT_RADIUS;
+	float plutoRadius = plutoScale * SPHERE_OBJECT_RADIUS;
+
+	float mercuryOrbitRadius = sunRadius + mercuryRadius + (mercuryDistanceMargin * distanceModifier);
+	float venusOrbitRadius = mercuryOrbitRadius + mercuryRadius + (venusDistanceMargin * distanceModifier);
+	float earthOrbitRadius = venusOrbitRadius + venusRadius + (earthDistanceMargin * distanceModifier);
+	float marsOrbitRadius = earthOrbitRadius + earthRadius + (marsDistanceMargin * distanceModifier);
+	float jupiterOrbitRadius = marsOrbitRadius + marsRadius + (jupiterDistanceMargin * distanceModifier);
+	float saturnOrbitRadius = jupiterOrbitRadius + jupiterRadius + (saturnDistanceMargin * distanceModifier);
+	float uranusOrbitRadius = saturnOrbitRadius + saturnRadius + (uranusDistanceMargin * distanceModifier);
+	float neptuneOrbitRadius = uranusOrbitRadius + uranusRadius + (neptuneDistanceMargin * distanceModifier);
+	float plutoOrbitRadius = neptuneOrbitRadius + neptuneRadius + (plutoDistanceMargin * distanceModifier);	
+	float moonOrbitRadius = earthRadius + moonRadius + (moonDistanceMargin * distanceModifier);
+	
 	// animation hyper params			(tweak these to adjust scene animation)
 
-	int precision = 2;					// animation angle interpolation precision
-	float earthOrbitDelay = 480;		// time for completing earth orbit animation in seconds (1yr = this amount of seconds)
+	int lowPrecision = 2;				// animation angle interpolation precision
+	int midPrecision = 3;					
+	int highPrecision = 5;
+	//float earthOrbitDelay = 10;		// time for completing earth orbit animation in seconds (1yr = this amount of seconds)
 
-	// calculate moon time span using ratio earthDelay / moonDelay = moonOrbitEarthDays / earthOrbitEarthDays
-	float moon_orbit_time_span = m.getRelativeValue(PConst::MOON_EARTH_DAY_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	// calculate moon time span using ratio (earthDelay / moonDelay = moonOrbitEarthDays / earthOrbitEarthDays)
+	float mercuryOrbitDelay = m.getRelativeValue(PConst::MERCURY_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	float venusOrbitDelay = m.getRelativeValue(PConst::VENUS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	float marsOrbitDelay = m.getRelativeValue(PConst::MARS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	float jupiterOrbitDelay = m.getRelativeValue(PConst::JUPITER_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	float saturnOrbitDelay = m.getRelativeValue(PConst::SATURN_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	float uranusOrbitDelay = m.getRelativeValue(PConst::URANUS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	float neptuneOrbitDelay = m.getRelativeValue(PConst::NEPTUNE_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	float plutoOrbitDelay = m.getRelativeValue(PConst::PLUTO_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+	float moonOrbitDelay = m.getRelativeValue(PConst::MOON_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
 
-	// note that the orbital period unit we're using here is the moon day not earth day
-	// moon got the same rotation and orbit period so the same side will always be facing earth
-	OrbitAnimator earthOrbitor = OrbitAnimator(earthOrbitDelay, PConst::EARTH_ORBITAL_PERIOD,
-		1.5f, earthOrbitRadius, PConst::EARTH_ECLIPTIC_INCLINATION);
-	OrbitAnimator moonOrbitor = OrbitAnimator(moon_orbit_time_span, PConst::MOON_SELF_DAY_ORBITAL_PERIOD,
-		1.1f, moonOrbitRadius, PConst::MOON_ECLIPTIC_INCLINATION);
-
-	glm::vec3 sun_pos = glm::vec3(0.0f, 0.0f, 0.0f);
-	glm::vec3 earth_pos, moon_pos;
-
-	float ms_time = (float)glfwGetTime() * 1000;	
-	earthOrbitor.animate(ms_time, precision, precision);
-	earth_pos = vecToVec3(earthOrbitor.getOrbitPosition());
-	moonOrbitor.animate(vec3ToVec(earth_pos), ms_time, precision, precision);
-	moon_pos = vecToVec3(moonOrbitor.getOrbitPosition());
+	OrbitAnimator mercuryOrbitor = OrbitAnimator(mercuryOrbitDelay, PConst::MERCURY_LOCAL_ORBITAL_PERIOD, 1.f, mercuryOrbitRadius, PConst::MERCURY_INCLINATION);
+	OrbitAnimator venusOrbitor = OrbitAnimator(venusOrbitDelay, PConst::VENUS_LOCAL_ORBITAL_PERIOD, 1.f, venusOrbitRadius, PConst::VENUS_INCLINATION);
+	OrbitAnimator earthOrbitor = OrbitAnimator(earthOrbitDelay, PConst::EARTH_ORBITAL_PERIOD, 1.f, earthOrbitRadius, PConst::EARTH_INCLINATION);
+	OrbitAnimator marsOrbitor = OrbitAnimator(marsOrbitDelay, PConst::MARS_LOCAL_ORBITAL_PERIOD, 1.f, marsOrbitRadius, PConst::MARS_INCLINATION);
+	OrbitAnimator jupiterOrbitor = OrbitAnimator(jupiterOrbitDelay, PConst::JUPITER_LOCAL_ORBITAL_PERIOD, 1.f, jupiterOrbitRadius, PConst::JUPITER_INCLINATION);
+	OrbitAnimator saturnOrbitor = OrbitAnimator(saturnOrbitDelay, PConst::SATURN_LOCAL_ORBITAL_PERIOD, 1.f, saturnOrbitRadius, PConst::SATURN_INCLINATION);
+	OrbitAnimator uranusOrbitor = OrbitAnimator(uranusOrbitDelay, PConst::URANUS_LOCAL_ORBITAL_PERIOD, 1.f, uranusOrbitRadius, PConst::URANUS_INCLINATION);
+	OrbitAnimator neptuneOrbitor = OrbitAnimator(neptuneOrbitDelay, PConst::NEPTUNE_LOCAL_ORBITAL_PERIOD, 1.f, neptuneOrbitRadius, PConst::NEPTUNE_INCLINATION);
+	OrbitAnimator plutoOrbitor = OrbitAnimator(plutoOrbitDelay, PConst::PLUTO_LOCAL_ORBITAL_PERIOD, 1.f, plutoOrbitRadius, PConst::PLUTO_INCLINATION);
+	OrbitAnimator moonOrbitor = OrbitAnimator(moonOrbitDelay, PConst::MOON_LOCAL_ORBITAL_PERIOD, 1.f, moonOrbitRadius, PConst::MOON_INCLINATION + PConst::EARTH_INCLINATION);
+	//animators.push_back(mercuryOrbitor);
+	//animators.push_back(venusOrbitor);
+	//animators.push_back(earthOrbitor);
+	//animators.push_back(marsOrbitor);
+	//animators.push_back(jupiterOrbitor);
+	//animators.push_back(saturnOrbitor);
+	//animators.push_back(uranusOrbitor);
+	//animators.push_back(neptuneOrbitor);
+	//animators.push_back(plutoOrbitor);
+	//animators.push_back(moonOrbitor);
 
 	// ==================== RENDER LOOP =========================
 
@@ -192,21 +264,53 @@ int main(int argc, char** argv)
 	cout << "Scene Set up\n";
 	cout << "\nLoading Time: " << (int)glfwGetTime() - startLoadingTime << "s\n\n";
 
-	sceneState.pauseScene(glfwGetTime());
 
+
+	sceneState.addSPlayTime(glfwGetTime());		// add asset loading time to paused time (rectify animation time)
+	sceneState.pauseScene(glfwGetTime(), true);
+
+	glm::vec3 sunPos = glm::vec3(0.0f, 0.0f, 0.0f);
+	glm::vec3 mercuryPos, venusPos, earthPos, marsPos, jupiterPos, saturnPos, uranusPos, neptunePos, plutoPos;
+	glm::vec3 moonPos;
+	
+	glm::vec3 Xaxis = glm::vec3(1.f, 0.f, 0.f);
+	glm::vec3 Yaxis = glm::vec3(0.f, 1.f, 0.f);
+	glm::vec3 Zaxis = glm::vec3(0.f, 0.f, 1.f);
+
+	bool firstTime = true;
 	while (!glfwWindowShouldClose(window))
 	{
 		// input
 		processKeyboard(window);
 
 		// animations calculations
-		if (!sceneState.getPause())
+		if (!sceneState.getPause() || firstTime)
 		{
-			ms_time = (float)sceneState.getMsPlayTime(glfwGetTime());
-			earthOrbitor.animate(ms_time, precision, precision);
-			earth_pos = vecToVec3(earthOrbitor.getOrbitPosition());
-			moonOrbitor.animate(vec3ToVec(earth_pos), ms_time, precision, precision);
-			moon_pos = vecToVec3(moonOrbitor.getOrbitPosition());
+			float ms_time = (float)sceneState.getMsPlayTime(glfwGetTime());
+			
+			mercuryOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, lowPrecision, firstTime);
+			venusOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, lowPrecision, firstTime);
+			earthOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, lowPrecision, firstTime);
+			marsOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, lowPrecision, firstTime);
+			jupiterOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, midPrecision, firstTime);
+			saturnOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, midPrecision, firstTime);
+			uranusOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, highPrecision, firstTime);
+			neptuneOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, highPrecision, firstTime);
+			plutoOrbitor.animate(vec3ToVec(sunPos), ms_time, lowPrecision, highPrecision, firstTime);
+			mercuryPos = vecToVec3(mercuryOrbitor.getOrbitPosition());
+			venusPos = vecToVec3(venusOrbitor.getOrbitPosition());
+			earthPos = vecToVec3(earthOrbitor.getOrbitPosition());
+			marsPos = vecToVec3(marsOrbitor.getOrbitPosition());
+			jupiterPos = vecToVec3(jupiterOrbitor.getOrbitPosition());
+			saturnPos = vecToVec3(saturnOrbitor.getOrbitPosition());
+			uranusPos = vecToVec3(uranusOrbitor.getOrbitPosition());
+			neptunePos = vecToVec3(neptuneOrbitor.getOrbitPosition());
+			plutoPos = vecToVec3(plutoOrbitor.getOrbitPosition());
+
+			moonOrbitor.animate(vec3ToVec(earthPos), ms_time, lowPrecision, lowPrecision, firstTime);
+			moonPos = vecToVec3(moonOrbitor.getOrbitPosition());
+
+			firstTime = false;
 		}
 
 		// render
@@ -220,45 +324,145 @@ int main(int argc, char** argv)
 		glm::mat4 projection = glm::mat4(1.f);
 		view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
 		projection = glm::perspective(glm::radians(Camera.FOV), 
-			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 100.f);
+			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 10000.f);
 
 		// sphere - sun
 		glUseProgram(basicShaderProgram);
 		model = glm::mat4(1.f);
-		model = glm::translate(model, sun_pos);
-		model = glm::rotate(model, glm::radians(PConst::SUN_AXIAL_TILT), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::translate(model, sunPos);
+		model = glm::rotate(model, glm::radians(PConst::SUN_AXIAL_TILT), Zaxis);
 		model = glm::scale(model, glm::vec3(sunScale));
 		glSetModelViewProjection(basicShaderProgram, model, view, projection);
 		glDrawVertexTriangles(sphereVAO, sunTexture, sphereVert.size() / 8);
 
+		// sphere - mercury
+		glUseProgram(illumShaderProgram);
+		model = glm::mat4(1.f);
+		model = glm::rotate(model, glm::radians(PConst::MERCURY_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, mercuryPos);
+		model = glm::rotate(model, glm::radians(PConst::MERCURY_AXIAL_TILT + PConst::MERCURY_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(mercuryOrbitor.getSpinAngle()), Yaxis);
+		model = glm::scale(model, glm::vec3(mercuryScale));
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
+		glSetModelViewProjection(illumShaderProgram, model, view, projection);
+		glDrawVertexTriangles(sphereVAO, mercuryTexture, sphereVert.size() / 8);
+
+		// sphere - venus
+		glUseProgram(illumShaderProgram);
+		model = glm::mat4(1.f);
+		model = glm::rotate(model, glm::radians(PConst::VENUS_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, venusPos);
+		model = glm::rotate(model, glm::radians(PConst::VENUS_AXIAL_TILT + PConst::VENUS_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(venusOrbitor.getSpinAngle()), Yaxis);
+		model = glm::scale(model, glm::vec3(venusScale));
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
+		glSetModelViewProjection(illumShaderProgram, model, view, projection);
+		glDrawVertexTriangles(sphereVAO, venusTexture, sphereVert.size() / 8);
+
 		// sphere - earth
 		glUseProgram(illumShaderProgram);
 		model = glm::mat4(1.f);
-		model = glm::translate(model, earth_pos);
-		model = glm::rotate(model, glm::radians(PConst::EARTH_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
-		model = glm::rotate(model, glm::radians(earthOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(PConst::EARTH_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, earthPos);
+		model = glm::rotate(model, glm::radians(PConst::EARTH_AXIAL_TILT + PConst::EARTH_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(earthOrbitor.getSpinAngle()), Yaxis);
 		model = glm::scale(model, glm::vec3(earthScale));
-		glSetLightingConfig(illumShaderProgram, sun_pos, Camera.Position);
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
 		glSetModelViewProjection(illumShaderProgram, model, view, projection);
 		glDrawVertexTriangles(sphereVAO, earthTexture, sphereVert.size() / 8);
 
-		// sphere - moon
+		// sphere - mars
 		glUseProgram(illumShaderProgram);
 		model = glm::mat4(1.f);
-		model = glm::translate(model, moon_pos);
-		model = glm::rotate(model, glm::radians(PConst::MOON_AXIAL_TILT), glm::vec3(0.f, 0.f, 1.f));
-		model = glm::rotate(model, glm::radians(moonOrbitor.getSpinAngle()), glm::vec3(0.f, 1.f, 0.f));
+		model = glm::rotate(model, glm::radians(PConst::MARS_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, marsPos);
+		model = glm::rotate(model, glm::radians(PConst::MARS_AXIAL_TILT + PConst::MARS_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(marsOrbitor.getSpinAngle()), Yaxis);
+		model = glm::scale(model, glm::vec3(marsScale));
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
+		glSetModelViewProjection(illumShaderProgram, model, view, projection);
+		glDrawVertexTriangles(sphereVAO, marsTexture, sphereVert.size() / 8);
+
+		// sphere - jupiter
+		glUseProgram(illumShaderProgram);
+		model = glm::mat4(1.f);
+		model = glm::rotate(model, glm::radians(PConst::JUPITER_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, jupiterPos);
+		model = glm::rotate(model, glm::radians(PConst::JUPITER_AXIAL_TILT + PConst::JUPITER_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(jupiterOrbitor.getSpinAngle()), Yaxis);
+		model = glm::scale(model, glm::vec3(jupiterScale));
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
+		glSetModelViewProjection(illumShaderProgram, model, view, projection);
+		glDrawVertexTriangles(sphereVAO, jupiterTexture, sphereVert.size() / 8);
+
+		// sphere - saturn
+		glUseProgram(illumShaderProgram);
+		model = glm::mat4(1.f);
+		model = glm::rotate(model, glm::radians(PConst::SATURN_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, saturnPos);
+		model = glm::rotate(model, glm::radians(PConst::SATURN_AXIAL_TILT + PConst::SATURN_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(saturnOrbitor.getSpinAngle()), Yaxis);
+		model = glm::scale(model, glm::vec3(saturnScale));
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
+		glSetModelViewProjection(illumShaderProgram, model, view, projection);
+		glDrawVertexTriangles(sphereVAO, saturnTexture, sphereVert.size() / 8);
+
+		// sphere - uranus
+		glUseProgram(illumShaderProgram);
+		model = glm::mat4(1.f);
+		model = glm::rotate(model, glm::radians(PConst::URANUS_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, uranusPos);
+		model = glm::rotate(model, glm::radians(PConst::URANUS_AXIAL_TILT + PConst::URANUS_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(uranusOrbitor.getSpinAngle()), Yaxis);
+		model = glm::scale(model, glm::vec3(uranusScale));
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
+		glSetModelViewProjection(illumShaderProgram, model, view, projection);
+		glDrawVertexTriangles(sphereVAO, uranusTexture, sphereVert.size() / 8);
+
+		// sphere - neptune
+		glUseProgram(illumShaderProgram);
+		model = glm::mat4(1.f);
+		model = glm::rotate(model, glm::radians(PConst::NEPTUNE_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, neptunePos);
+		model = glm::rotate(model, glm::radians(PConst::NEPTUNE_AXIAL_TILT + PConst::NEPTUNE_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(neptuneOrbitor.getSpinAngle()), Yaxis);
+		model = glm::scale(model, glm::vec3(neptuneScale));
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
+		glSetModelViewProjection(illumShaderProgram, model, view, projection);
+		glDrawVertexTriangles(sphereVAO, neptuneTexture, sphereVert.size() / 8);
+
+		// sphere - pluto
+		glUseProgram(illumShaderProgram);
+		model = glm::mat4(1.f);
+		model = glm::rotate(model, glm::radians(PConst::PLUTO_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, plutoPos);
+		model = glm::rotate(model, glm::radians(PConst::PLUTO_AXIAL_TILT + PConst::PLUTO_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(plutoOrbitor.getSpinAngle()), Yaxis);
+		model = glm::scale(model, glm::vec3(plutoScale));
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
+		glSetModelViewProjection(illumShaderProgram, model, view, projection);
+		glDrawVertexTriangles(sphereVAO, plutoTexture, sphereVert.size() / 8);
+
+		// sphere - moon
+		// moon is slightly more complex as it is orbiting earth
+		glUseProgram(illumShaderProgram);
+		model = glm::mat4(1.f);
+		//model = glm::rotate(model, glm::radians(PConst::EARTH_ASCENDING_NODE + PConst::MOON_ASCENDING_NODE), Yaxis); // add dynamic ascending node here
+		model = glm::rotate(model, glm::radians(PConst::EARTH_ASCENDING_NODE), Yaxis);
+		model = glm::translate(model, moonPos);
+		model = glm::rotate(model, glm::radians(PConst::EARTH_INCLINATION + PConst::MOON_AXIAL_TILT + PConst::MOON_INCLINATION), Zaxis);
+		model = glm::rotate(model, glm::radians(moonOrbitor.getSpinAngle()), Yaxis);
 		model = glm::scale(model, glm::vec3(moonScale));
-		glSetLightingConfig(illumShaderProgram, sun_pos, Camera.Position);
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
 		glSetModelViewProjection(illumShaderProgram, model, view, projection);
 		glDrawVertexTriangles(sphereVAO, moonTexture, sphereVert.size() / 8);
 
 		// ufo
 		glUseProgram(illumShaderProgram);
 		model = glm::mat4(1.f);
-		model = glm::translate(model, glm::vec3(earth_pos.x, earth_pos.y + earthScale*2, earth_pos.z));
+		model = glm::translate(model, glm::vec3(earthPos.x, earthPos.y + earthScale*2, earthPos.z));
 		model = glm::scale(model, glm::vec3(earthScale/10.f));
-		glSetLightingConfig(illumShaderProgram, sun_pos, Camera.Position);
+		glSetLightingConfig(illumShaderProgram, sunPos, Camera.Position);
 		glSetModelViewProjection(illumShaderProgram, model, view, projection);
 		glDrawVertexTriangles(ufoVAO, ufoTexture, ufoVert.size() / 8);
 
@@ -300,6 +504,18 @@ void processKeyboard(GLFWwindow* window)
 
 	// scene
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) sceneState.pauseScene(glfwGetTime());
+	if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS)
+	{
+		earthOrbitDelay -= 1;
+		//updateAnimatorsDelays(animators);
+		cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
+	}
+	if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS)
+	{
+		earthOrbitDelay += 1;
+		//updateAnimatorsDelays(animators);
+		cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
+	}
 
 }
 
@@ -479,8 +695,8 @@ void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::ve
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.specularStrength"), 0.3f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.shininess"), 16.f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.constant"), 1.0f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.linear"), 0.007f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.quadratic"), 0.0002f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light.linear"), 0.000014f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light.quadratic"), 0.00000007f);
 	//glUniform1f(glGetUniformLocation(shaderProgram, "light.phi"), 15.f);
 }
 
@@ -493,3 +709,22 @@ vector<float> vec3ToVec(glm::vec3 vec3)
 {
 	return vector<float>{vec3.x, vec3.y, vec3.z};
 }
+
+//void updateAnimatorsDelays(vector<OrbitAnimator&> animators)
+//{
+//	PlanetMath m;
+//	vector<float> delays(animators.size(), 0.f);
+//	delays[0] = m.getRelativeValue(PConst::MERCURY_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	delays[1] = m.getRelativeValue(PConst::VENUS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	delays[2] = m.getRelativeValue(PConst::MARS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	delays[3] = m.getRelativeValue(PConst::JUPITER_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	delays[4] = m.getRelativeValue(PConst::SATURN_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	delays[5] = m.getRelativeValue(PConst::URANUS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	delays[6] = m.getRelativeValue(PConst::NEPTUNE_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	delays[7] = m.getRelativeValue(PConst::PLUTO_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	delays[8] = m.getRelativeValue(PConst::MOON_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
+//	for (int i = 0; i < animators.size(); i++)
+//	{
+//		animators[i].setOrbitalDelay(delays[i]);
+//	}
+//}

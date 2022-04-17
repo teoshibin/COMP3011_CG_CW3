@@ -69,8 +69,8 @@ public:
 	// Public Methods
 
 	// animate
-	void animate(float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision);
-	void animate(std::vector<float> orbit_origin, float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision);
+	void animate(float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision, bool force = false);
+	void animate(std::vector<float> orbit_origin, float current_ms_time, unsigned int spin_angle_precision, unsigned int orbit_angle_precision, bool force = false);
 
 private:
 
@@ -104,11 +104,11 @@ private:
 	// step count an angle with certain delay and precision
 	bool stepAngle(float current_ms_time, float* previous_timestamp, float s_delay_per_angle, unsigned int precision, float* angle);
 	// update delays calculation whenever hyperparam is changed
-	void updateDelays();
+	void initDelays();
 
 	// calculate new spin angle
 	void updateSpin(float current_ms_time, unsigned int precision);
 	// calculate new orbit angle and positions
-	void updateOrbit(std::vector<float> orbit_origin, float current_ms_time, unsigned int precision);
+	void updateOrbit(std::vector<float> orbit_origin, float current_ms_time, unsigned int precision, bool force = false);
 	
 };
