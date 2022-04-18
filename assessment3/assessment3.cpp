@@ -7,6 +7,7 @@
 #include <iostream>
 #include <vector>
 #include <map>
+#include <stdlib.h>
 #include "stb_image.h"
 #include "camera.h"
 #include "FlyThroughCamera.h"
@@ -30,7 +31,7 @@ void glSetupVertexObject(unsigned int& VAO, unsigned int& VBO, vector<float>& da
 void glDrawVertexTriangles(unsigned int VAO, GLuint texture, int numberOfVertex);
 void glSetModelViewProjection(unsigned int shaderProgram, glm::mat4 model, glm::mat4 view, glm::mat4 projection);
 void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::vec3 camPos);
-
+void updateAnimatorsDelays();
 glm::vec3 vecToVec3(vector<float> vec);
 vector<float> vec3ToVec(glm::vec3 vec3);
 
@@ -49,8 +50,14 @@ float prevMouseY;
 // scene 
 SceneState sceneState;
 vector<OrbitAnimator> animators;
+
+int earthIdx = 3;
+int sunIdx = 0;
 float earthOrbitDelay = 50;
 glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
+vector<RenderedBody> renderedBodies;
+PlanetMath m;
+vector<BodyConst> bodyConstants = m.getSolarSystemConstants();
 
 int main(int argc, char** argv)
 {
@@ -174,8 +181,6 @@ int main(int argc, char** argv)
 
 	// =========== MODEL & ANIMATION CONFIG ==============
 
-	PlanetMath m;
-
 	// model constants
 	float SPHERE_OBJECT_RADIUS = 2;		// 3d vertex sphere radius (do not change)
 
@@ -186,8 +191,6 @@ int main(int argc, char** argv)
 
 	// all these values have to change if customization structure is changed
 	int attributeCount = 7;
-	int earthIdx = 3;
-	int sunIdx = 0;
 	vector<float> bodiesCustomization{
 
 		// 1. is animated boolean
@@ -214,11 +217,11 @@ int main(int argc, char** argv)
 		1,	1,		2,		1.f,	3,		10,		0,	// moon
 	};
 
-	vector<RenderedBody> renderedBodies(bodiesCustomization.size() / attributeCount);
+	renderedBodies.resize(bodiesCustomization.size() / attributeCount);
 	renderedBodies[sunIdx].position = vec3ToVec(lightPos);
 
 	// get predefined body constants
-	vector<BodyConst> bodyConstants = m.getSolarSystemConstants();
+	bodyConstants = m.getSolarSystemConstants();
 
 	// add additional body constants here
 
@@ -345,7 +348,8 @@ int main(int argc, char** argv)
 	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // set texture to 0
 
 	sceneState.addSPlayTime(glfwGetTime());		// add asset loading time to paused time (rectify animation time)
-	sceneState.pauseScene(glfwGetTime(), true);
+	sceneState.addSPlayTime(rand())
+    //sceneState.pauseScene(glfwGetTime(), true);
 
 	glm::vec3 Xaxis = glm::vec3(1.f, 0.f, 0.f);
 	glm::vec3 Yaxis = glm::vec3(0.f, 1.f, 0.f);
@@ -379,7 +383,7 @@ int main(int argc, char** argv)
 				}
 
 				// animate orbit of current object with a origin of parent's position
-				animators[animatorIdx].animate(ms_time, 2, 5, firstTime);
+				animators[animatorIdx].animate(ms_time, 2, 4, firstTime);
 
 				// retrieve position
 				renderedBodies[i].position = animators[animatorIdx].getOrbitPosition();
@@ -401,7 +405,7 @@ int main(int argc, char** argv)
 		glm::mat4 projection = glm::mat4(1.f);
 		view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
 		projection = glm::perspective(glm::radians(Camera.FOV),
-			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 10000.f);
+			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 20000.f);
 
 		for (int i = 0; i < renderedBodies.size(); i++)
 		{
@@ -507,16 +511,16 @@ void processKeyboard(GLFWwindow* window)
 
 	// scene
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) sceneState.pauseScene(glfwGetTime());
-	if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS)
-	{
-		earthOrbitDelay -= 1;
-		//updateAnimatorsDelays(animators);
-		cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
-	}
 	if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS)
 	{
-		earthOrbitDelay += 1;
-		//updateAnimatorsDelays(animators);
+		if (earthOrbitDelay > 1) earthOrbitDelay -= 1;
+		updateAnimatorsDelays();
+		cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
+	}
+	if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS)
+	{
+		if (earthOrbitDelay < 3601) earthOrbitDelay += 1;
+		updateAnimatorsDelays();
 		cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
 	}
 
@@ -608,6 +612,36 @@ unsigned int loadCubemap(vector<string> faces)
 	glTexParameteri(GL_TEXTURE_CUBE_MAP, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
 
 	return textureID;
+}
+
+
+// ============ animation calculations ================
+
+void updateAnimatorsDelays()
+{
+	// calculate delays relative to earth orbiting period
+	vector<float> delays;
+	for (int i = 0; i < renderedBodies.size(); i++)
+	{
+		if (renderedBodies[i].animatorIndex == -1) continue;
+		if (i == earthIdx) // use delay specified by user
+		{
+			delays.push_back(earthOrbitDelay);
+		}
+		else // use delay relative to earth delay
+		{
+			delays.push_back(m.getRelativeValue(
+				bodyConstants[renderedBodies[i].bodyConstantIdx].orbitalPeriod,
+				bodyConstants[renderedBodies[earthIdx].bodyConstantIdx].orbitalPeriod, earthOrbitDelay));
+		}
+	}
+
+	for (int i = 0; i < renderedBodies.size(); i++)
+	{
+		if (renderedBodies[i].animatorIndex == -1) continue; // not animated
+		int animatorIndex = renderedBodies[i].animatorIndex;
+		animators[animatorIndex].setOrbitalDelay(delays[animatorIndex]);
+	}
 }
 
 
@@ -715,21 +749,3 @@ vector<float> vec3ToVec(glm::vec3 vec3)
 	return vector<float>{vec3.x, vec3.y, vec3.z};
 }
 
-//void updateAnimatorsDelays(vector<OrbitAnimator&> animators)
-//{
-//	PlanetMath m;
-//	vector<float> delays(animators.size(), 0.f);
-//	delays[0] = m.getRelativeValue(PConst::MERCURY_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	delays[1] = m.getRelativeValue(PConst::VENUS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	delays[2] = m.getRelativeValue(PConst::MARS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	delays[3] = m.getRelativeValue(PConst::JUPITER_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	delays[4] = m.getRelativeValue(PConst::SATURN_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	delays[5] = m.getRelativeValue(PConst::URANUS_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	delays[6] = m.getRelativeValue(PConst::NEPTUNE_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	delays[7] = m.getRelativeValue(PConst::PLUTO_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	delays[8] = m.getRelativeValue(PConst::MOON_ORBITAL_PERIOD, PConst::EARTH_ORBITAL_PERIOD, earthOrbitDelay);
-//	for (int i = 0; i < animators.size(); i++)
-//	{
-//		animators[i].setOrbitalDelay(delays[i]);
-//	}
-//}
