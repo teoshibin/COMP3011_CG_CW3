@@ -113,17 +113,22 @@ struct BodyConst
 
 struct RenderedBody
 {
-	float bodyConstantIdx = -1;
+	// render
+	std::vector<float> position;
+	float rotation = 0;
 
-	int animatorIndex = -1;
+	// animation
 	float scale = 1;
 	float scaleModifier = 1;
 	float distanceMargin = 0;
 	float orbitRadius = 0;
 	float ovalRatio = 1;
 
+	// linking
+	int bodyConstantIdx = -1;
+	int animatorIndex = -1;
 	int orbitParentIdx = -1;
-	std::vector<float> position;
+	int VAOIdx = -1;
 };
 
 class PlanetMath
@@ -134,8 +139,9 @@ public:
 	float getRelativeValue(float a1, float b1, float b2);
 	float getRelativeValue(float a1, float b1, float b2, float r);
 	float getMarginedRadius(float radiusA, float radiusB, float marginB, float modifierB);
-	bool findEqual(std::vector<float> values, float value);
+	//bool findEqual(std::vector<float> values, float value);
 	//std::vector<float> batchGetRelativeValue(std::vector<float> as1, float bs1, float bs2);
+	float sumRecursiveParentInclination(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex);
 private:
 	std::map < std::string, int> keyMap
 	{

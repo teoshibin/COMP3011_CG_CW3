@@ -18,8 +18,8 @@ std::vector<BodyConst> PlanetMath::getSolarSystemConstants()
 	animBodies[0].radius = PConst::SUN_RADIUS;
 	animBodies[0].orbitalPeriod = INFINITY;
 	animBodies[0].localOrbitalPeriod = INFINITY;
-	animBodies[0].ascendingNode = INFINITY;
-	animBodies[0].inclination = INFINITY;
+	animBodies[0].ascendingNode = 0;
+	animBodies[0].inclination = 0;
 	animBodies[0].axialTilt = PConst::SUN_AXIAL_TILT;
 
 	animBodies[1].radius = PConst::MERCURY_RADIUS;
@@ -38,7 +38,7 @@ std::vector<BodyConst> PlanetMath::getSolarSystemConstants()
 	
 	animBodies[3].radius = PConst::EARTH_RADIUS;
 	animBodies[3].orbitalPeriod = PConst::EARTH_ORBITAL_PERIOD;
-	animBodies[3].localOrbitalPeriod = INFINITY;
+	animBodies[3].localOrbitalPeriod = PConst::EARTH_ORBITAL_PERIOD;
 	animBodies[3].ascendingNode = PConst::EARTH_ASCENDING_NODE;
 	animBodies[3].inclination = PConst::EARTH_INCLINATION;
 	animBodies[3].axialTilt = PConst::EARTH_AXIAL_TILT;
@@ -90,7 +90,7 @@ std::vector<BodyConst> PlanetMath::getSolarSystemConstants()
 	animBodies[10].radius = PConst::MOON_RADIUS;
 	animBodies[10].orbitalPeriod = PConst::MOON_ORBITAL_PERIOD;
 	animBodies[10].localOrbitalPeriod = PConst::MOON_LOCAL_ORBITAL_PERIOD;
-	animBodies[10].ascendingNode = INFINITY;
+	animBodies[10].ascendingNode = 0;
 	animBodies[10].inclination = PConst::MOON_INCLINATION;
 	animBodies[10].axialTilt = PConst::MOON_AXIAL_TILT;
 
@@ -131,17 +131,27 @@ float PlanetMath::getMarginedRadius(float radiusA, float radiusB, float marginB,
 	return 0.0f;
 }
 
-bool PlanetMath::findEqual(std::vector<float> values, float value)
+float PlanetMath::sumRecursiveParentInclination(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex)
 {
-	for (int j = 0; j < values.size(); j++)
+	// if not more parent then do this (base case)
+	if (rb[targetIndex].orbitParentIdx == -1)
 	{
-		if (values[j] == value)
-		{
-			return true;
-		}
+		return bc[rb[targetIndex].bodyConstantIdx].inclination;
 	}
-	return false;
+	return bc[rb[targetIndex].bodyConstantIdx].inclination + sumRecursiveParentInclination(rb, bc, rb[targetIndex].orbitParentIdx);
 }
+
+//bool PlanetMath::findEqual(std::vector<float> values, float value)
+//{
+//	for (int j = 0; j < values.size(); j++)
+//	{
+//		if (values[j] == value)
+//		{
+//			return true;
+//		}
+//	}
+//	return false;
+//}
 
 
 //std::vector<float> PlanetMath::batchGetRelativeValue(std::vector<float> as1, float bs1, float bs2)
