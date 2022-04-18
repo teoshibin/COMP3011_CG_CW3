@@ -137,16 +137,17 @@ struct RenderedBody
 
 	// linking
 	int bodyConstantIdx = -1;
-	int animatorIndex = -1;
+	int animatorIdx = -1;
 	int orbitParentIdx = -1;
 	int VAOIdx = -1;
+	int textureIdx = -1;
 };
 
 class PlanetMath
 {
 public:
 	std::vector<BodyConst> getSolarSystemConstants();
-	int getPlanet(std::string name);
+	//int getPlanet(std::string name);
 	float getRelativeValue(float a1, float b1, float b2);
 	float getRelativeValue(float a1, float b1, float b2, float r);
 	//float getMarginedRadius(float radiusA, float radiusB, float marginB, float modifierB);
@@ -154,19 +155,21 @@ public:
 	//std::vector<float> batchGetRelativeValue(std::vector<float> as1, float bs1, float bs2);
 	float sumAllInclinations(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex);
 	float sumAllAscendingNodes(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex);
+	std::vector<float> sumAllPositions(std::vector<RenderedBody> rb, int targetIndex);
 private:
-	std::map < std::string, int> keyMap
-	{
-		{"sun",		1},
-		{"mercury",	2},
-		{"venus",	3},
-		{"earth",	4},
-		{"mars",	5},
-		{"jupiter",	6},
-		{"saturn",	7},
-		{"uranus",	8},
-		{"neptune",	9},
-		{"pluto",	10},
-		{"moon",	11},
-	};
+	std::vector<float> elementwiseAdd(std::vector<float> a, std::vector<float> b);
+	//std::map < std::string, int> keyMap
+	//{
+	//	{"sun",		1},
+	//	{"mercury",	2},
+	//	{"venus",	3},
+	//	{"earth",	4},
+	//	{"mars",	5},
+	//	{"jupiter",	6},
+	//	{"saturn",	7},
+	//	{"uranus",	8},
+	//	{"neptune",	9},
+	//	{"pluto",	10},
+	//	{"moon",	11},
+	//};
 };

@@ -21,21 +21,36 @@
 
 using namespace std;
 
+// ======================= prototype =======================
+
+// IO function
 void processKeyboard(GLFWwindow* window);
 void processMouse(GLFWwindow* window, double x, double y);
+
+// animation keyboard interaction
+void updateAnimatorsDelays();
+void randomizeOrbitAngles();
+
+// load function
 unsigned int loadCubemap(vector<string> filename);
 unsigned int loadTexture(const char* filename);
-void displayLoadingScreen(GLFWwindow* window);
-void displaySkyBox(unsigned int& VAO, GLuint texture, unsigned int shaderProgram, glm::mat4 view, glm::mat4 projection);
+
+// opengl helper
 void glSetupVertexObject(unsigned int& VAO, unsigned int& VBO, vector<float>& data, vector<int> attribLayout);
 void glDrawVertexTriangles(unsigned int VAO, GLuint texture, int numberOfVertex);
 void glSetModelViewProjection(unsigned int shaderProgram, glm::mat4 model, glm::mat4 view, glm::mat4 projection);
 void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::vec3 camPos);
-void updateAnimatorsDelays();
+
+// helper
 glm::vec3 vecToVec3(vector<float> vec);
 vector<float> vec3ToVec(glm::vec3 vec3);
 
-//void updateAnimatorsDelays(vector<OrbitAnimator&> animators);
+// opengl code dump
+void displayLoadingScreen(GLFWwindow* window);
+void displaySkyBox(unsigned int& VAO, GLuint texture, unsigned int shaderProgram, glm::mat4 view, glm::mat4 projection);
+
+
+// ====================== global variable =======================
 
 // settings
 int WINDOW_WIDTH = 1280;
@@ -53,11 +68,13 @@ vector<OrbitAnimator> animators;
 
 int earthIdx = 3;
 int sunIdx = 0;
-float earthOrbitDelay = 50;
+float earthOrbitDelay = 600;
 glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 vector<RenderedBody> renderedBodies;
 PlanetMath m;
-vector<BodyConst> bodyConstants = m.getSolarSystemConstants();
+vector<BodyConst> bodyConstants;
+
+// ==================== main =======================
 
 int main(int argc, char** argv)
 {
@@ -136,6 +153,7 @@ int main(int argc, char** argv)
 	};
 	GLuint skyTexture = loadCubemap(files);
 	cout << "Textures Loaded\n\n";
+
 	vector<vector<GLuint>> textures{
 		{ sunTexture },
 		{ mercuryTexture },
@@ -192,40 +210,63 @@ int main(int argc, char** argv)
 	float earthScale = 15;				// master scale
 
 	// all these values have to change if customization structure is changed
-	int attributeCount = 7;
+	int attributeCount = 8;
 	vector<float> bodiesCustomization{
 
 		// 1. is animated boolean
 		// 2. scale
 		// 3. margin, the distance between the previous orbiting planet and current planet (this shouldn't include their radius)
 		// 4. oval ratio, major minor axis ratio
-		// 5. orbiting parent index (-1 not orbiting anything)
-		// 6. index to body constant attributes (BodyConst class) and textures
-		// 7. VAO and vertex size index
+		// 5. orbiting parent index (-1 not orbiting anything) [refer to this array]
+		// 6. body constant index (BodyConst class) [refer to "bodyConstants" variable]
+		// 7. VAO and vertex size index [refer to "vertexSize" variable]
+		// 8. texture index [refer to "textures" variable]
 
-		// rules: none orbiting first and revovled object must come before orbiting object as some values are depend on orbited objects
+		// rules: revovled object must come before orbiting object as some calculations are depend on orbited objects
 
-//      1   2		3		4		5		6		7
-		0,	0.3,	0,		1.f,	-1,		0,		0,	// sun
-		1,	1,		20,		1.f,	0,		1,		0,	// mercury
-		1,	1,		20,		1.f,	0,		2,		0,	// venus
-		1,	1,		20,		1.f,	0,		3,		0,	// earth
-		1,	1,		20,		1.f,	0,		4,		0,	// mars
-		1,	1,		60,		1.f,	0,		5,		0,	// jupiter
-		1,	1,		60,		1.f,	0,		6,		0,	// saturn
-		1,	1,		100,	1.f,	0,		7,		0,	// uranus
-		1,	1,		80,		1.f,	0,		8,		0,	// neptune
-		1,	1,		40,		1.f,	0,		9,		0,	// pluto
-		1,	1,		2,		1.f,	3,		10,		0,	// moon
+	//  1   2		3		4		5	6	7   8
+		0,	0.3,	0,		1.f,	-1,	0,	0,	0,	// 0. sun
+		1,	1,		20,		1.f,	0,	1,	0,	1,	// 1. mercury
+		1,	1,		20,		1.f,	0,	2,	0,	2,	// 2. venus
+		1,	1,		20,		1.f,	0,	3,	0,	3,	// 3. earth
+		1,	1,		20,		1.f,	0,	4,	0,	4,	// 4. mars
+		1,	1,		60,		1.f,	0,	5,	0,	5,	// 5. jupiter
+		1,	1,		60,		1.f,	0,	6,	0,	6,	// 6. saturn
+		1,	1,		100,	1.f,	0,	7,	0,	7,	// 7. uranus
+		1,	1,		80,		1.f,	0,	8,	0,	8,	// 8. neptune
+		1,	1,		40,		1.f,	0,	9,	0,	9,	// 9. pluto
+		1,	1,		10,		1.f,	3,	10,	0,	10, // 10. moon
+		1,	1,		2,		1.f,	10,	11,	1,	11, // 11. ufo 1
+		1,	1,		0.3,	1.05f,	10,	12,	1,	11, // 12. ufo 2
+		1,	1,		0.5,	1.f,	11,	12,	1,	11, // 13. ufo 3
 	};
+	// BUG: when 1. is 1 and 5. is not -1 will cause error
+	// TODO: add clockwise orbit into animator
+	// TODO: add planet rings
+	// TODO: earth use multi textures
 
 	renderedBodies.resize(bodiesCustomization.size() / attributeCount);
 	renderedBodies[sunIdx].position = vec3ToVec(lightPos);
 
-	// get predefined body constants
+	// get predefined body constants for sun til moon
 	bodyConstants = m.getSolarSystemConstants();
 
-	// add additional body constants here
+	// add additional custom made body constants for additional objects
+	// this part is just pure creativity nothing technical
+	BodyConst ufoBc;
+	ufoBc.ascendingNode = 0;								// adjust orbit ascending starting point (degree)
+	ufoBc.axialTilt = 0;									// adjust axial tilt relative to orbit plane (degree)
+	ufoBc.inclination = 30;									// adjust orbit inclination angle (degree)
+	ufoBc.localOrbitalPeriod = 30;							// number of spins per orbit
+	ufoBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 8;	// orbit duration
+	ufoBc.radius = PConst::MOON_RADIUS / 3;						// object size (will be scaled relative to earth)
+	bodyConstants.push_back(ufoBc);	// 11
+
+	ufoBc.axialTilt = 40;
+	ufoBc.inclination = 40;
+	ufoBc.ascendingNode = 90;
+	ufoBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 10;
+	bodyConstants.push_back(ufoBc); // 12
 
 
 	if (bodiesCustomization.size() / attributeCount != bodyConstants.size()) cout << "customization params not equal size\n";
@@ -236,12 +277,12 @@ int main(int argc, char** argv)
 	{
 		if ((bool)bodiesCustomization[i * attributeCount])
 		{
-			renderedBodies[i].animatorIndex = animIndexCount;
+			renderedBodies[i].animatorIdx = animIndexCount;
 			animIndexCount++;
 		}
 		else
 		{
-			renderedBodies[i].animatorIndex = -1;
+			renderedBodies[i].animatorIdx = -1;
 		}
 		renderedBodies[i].scaleModifier = bodiesCustomization[i * attributeCount + 1];
 		renderedBodies[i].distanceMargin = bodiesCustomization[i * attributeCount + 2];
@@ -249,13 +290,14 @@ int main(int argc, char** argv)
 		renderedBodies[i].orbitParentIdx = bodiesCustomization[i * attributeCount + 4];
 		renderedBodies[i].bodyConstantIdx = bodiesCustomization[i * attributeCount + 5];
 		renderedBodies[i].VAOIdx = bodiesCustomization[i * attributeCount + 6];
+		renderedBodies[i].textureIdx = bodiesCustomization[i * attributeCount + 7];
 	}
 
 	// compute scale relative to earth
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
 		if (i == earthIdx) continue;
-		renderedBodies[i].scale = m.getRelativeValue(bodyConstants[i].radius,
+		renderedBodies[i].scale = m.getRelativeValue(bodyConstants[renderedBodies[i].bodyConstantIdx].radius,
 			PConst::EARTH_RADIUS, earthScale, renderedBodies[i].scaleModifier);
 	}
 	renderedBodies[earthIdx].scale = earthScale; // set earth scale
@@ -304,7 +346,7 @@ int main(int argc, char** argv)
 	vector<float> delays;
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
-		if (renderedBodies[i].animatorIndex == -1) continue;
+		if (renderedBodies[i].animatorIdx == -1) continue;
 		if (i == earthIdx) // use delay specified by user
 		{
 			delays.push_back(earthOrbitDelay);
@@ -320,7 +362,7 @@ int main(int argc, char** argv)
 	// calculate sum of all parents ascending node angle and sum of all inlinations including it's own
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
-		if (renderedBodies[i].animatorIndex == -1) continue; // not animated
+		if (renderedBodies[i].animatorIdx == -1) continue; // not animated
 		int parentIndex = renderedBodies[i].orbitParentIdx;
 		renderedBodies[i].parentsAscendingNodeSum = m.sumAllAscendingNodes(
 			renderedBodies, bodyConstants, parentIndex);
@@ -331,15 +373,16 @@ int main(int argc, char** argv)
 	// initialize animators
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
-		if (renderedBodies[i].animatorIndex == -1) continue; // not animated
-		int animatorIndex = renderedBodies[i].animatorIndex;
+		if (renderedBodies[i].animatorIdx == -1) continue; // not animated
+		int animatorIndex = renderedBodies[i].animatorIdx;
 		int bodyConstantIndex = renderedBodies[i].bodyConstantIdx;
 		animators.push_back(
 			OrbitAnimator(delays[animatorIndex], bodyConstants[bodyConstantIndex].localOrbitalPeriod,
 				renderedBodies[i].ovalRatio, renderedBodies[i].orbitRadius,	renderedBodies[i].allInclinationSum)
 		);
-		animators[animatorIndex].addOrbitAngle(rand() % 360);
 	}
+
+	randomizeOrbitAngles();
 
 	cout << "Scene Set up\n";
 	cout << "\nLoading Time: " << (int)glfwGetTime() - startLoadingTime << "s\n\n";
@@ -371,11 +414,11 @@ int main(int argc, char** argv)
 			for (int i = 0; i < renderedBodies.size(); i++)
 			{
 				// skip none animated objects
-				if (renderedBodies[i].animatorIndex == -1) continue;
+				if (renderedBodies[i].animatorIdx == -1) continue;
 
 				// current orbiting object's parent index
 				int parentIdx = renderedBodies[i].orbitParentIdx;
-				int animatorIdx = renderedBodies[i].animatorIndex;
+				int animatorIdx = renderedBodies[i].animatorIdx;
 
 				// parent must update its animated position before the child is, thus parent index < child index
 				if (parentIdx > i)
@@ -412,11 +455,12 @@ int main(int argc, char** argv)
 		for (int i = 0; i < renderedBodies.size(); i++)
 		{
 			int bcIdx = renderedBodies[i].bodyConstantIdx;
+			int txIdx = renderedBodies[i].textureIdx;
 			BodyConst& bc = bodyConstants[bcIdx];
 			RenderedBody& rb = renderedBodies[i];
 
 			// if object is not animated
-			if (renderedBodies[i].animatorIndex == -1)
+			if (renderedBodies[i].animatorIdx == -1)
 			{
 				// if object is light source use different shader, default to illum shader
 				unsigned int shaderProg = illumShaderProgram;
@@ -428,7 +472,7 @@ int main(int argc, char** argv)
 				model = glm::rotate(model, glm::radians(bc.axialTilt), Zaxis);
 				model = glm::scale(model, glm::vec3(rb.scale));
 				glSetModelViewProjection(shaderProg, model, view, projection);
-				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[bcIdx][0], vertexSize[rb.VAOIdx]);
+				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
 
 			}
 			// if object is animated
@@ -443,7 +487,7 @@ int main(int argc, char** argv)
 				model = glm::rotate(model, glm::radians(rb.parentsAscendingNodeSum), Yaxis);
 
 				// move world centered orbit to body centered orbit (such as moon orbiting sun translate to moon orbiting earth)
-				model = glm::translate(model, vecToVec3(pr.position));
+				model = glm::translate(model, vecToVec3(m.sumAllPositions(renderedBodies, rb.orbitParentIdx)));
 
 				// rotate whole orbit to change orbit ascending starting point
 				model = glm::rotate(model, glm::radians(bc.ascendingNode), Yaxis);
@@ -461,7 +505,7 @@ int main(int argc, char** argv)
 				model = glm::scale(model, glm::vec3(rb.scale));										
 				glSetLightingConfig(illumShaderProgram, lightPos, Camera.Position);
 				glSetModelViewProjection(illumShaderProgram, model, view, projection);
-				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[bcIdx][0], vertexSize[rb.VAOIdx]);
+				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
 				//TODO use multiple textures
 			}
 		}
@@ -525,7 +569,7 @@ void processKeyboard(GLFWwindow* window)
 		updateAnimatorsDelays();
 		cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
 	}
-
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) randomizeOrbitAngles();
 }
 
 void processMouse(GLFWwindow* window, double x, double y)
@@ -625,7 +669,7 @@ void updateAnimatorsDelays()
 	vector<float> delays;
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
-		if (renderedBodies[i].animatorIndex == -1) continue;
+		if (renderedBodies[i].animatorIdx == -1) continue;
 		if (i == earthIdx) // use delay specified by user
 		{
 			delays.push_back(earthOrbitDelay);
@@ -640,12 +684,21 @@ void updateAnimatorsDelays()
 
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
-		if (renderedBodies[i].animatorIndex == -1) continue; // not animated
-		int animatorIndex = renderedBodies[i].animatorIndex;
+		if (renderedBodies[i].animatorIdx == -1) continue; // not animated
+		int animatorIndex = renderedBodies[i].animatorIdx;
 		animators[animatorIndex].setOrbitalDelay(delays[animatorIndex]);
 	}
 }
 
+void randomizeOrbitAngles()
+{
+	for (int i = 0; i < renderedBodies.size(); i++)
+	{
+		if (renderedBodies[i].animatorIdx == -1) continue; // not animated
+		int animatorIndex = renderedBodies[i].animatorIdx;
+		animators[animatorIndex].addOrbitAngle(rand() % 360); // randomize initial orbit angle
+	}
+}
 
 // ============ extra openGL stuff ===============
 

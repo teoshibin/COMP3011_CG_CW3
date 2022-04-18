@@ -97,10 +97,10 @@ std::vector<BodyConst> PlanetMath::getSolarSystemConstants()
 	return animBodies;
 }
 
-int PlanetMath::getPlanet(std::string name)
-{
-	return keyMap[name] - 1;
-}
+//int PlanetMath::getPlanet(std::string name)
+//{
+//	return keyMap[name] - 1;
+//}
 
 /// <summary>
 /// calculate a2 using ratio
@@ -149,6 +149,29 @@ float PlanetMath::sumAllInclinations(std::vector<RenderedBody> rb, std::vector<B
 		return bc[rb[targetIndex].bodyConstantIdx].inclination;
 	}
 	return bc[rb[targetIndex].bodyConstantIdx].inclination + sumAllInclinations(rb, bc, rb[targetIndex].orbitParentIdx);
+}
+
+std::vector<float> PlanetMath::sumAllPositions(std::vector<RenderedBody> rb, int targetIndex)
+{
+	// if not more parent then do this (base case)
+	if (rb[targetIndex].orbitParentIdx == -1)
+	{
+		return rb[targetIndex].position;
+	}
+	return elementwiseAdd(rb[targetIndex].position, sumAllPositions(rb, rb[targetIndex].orbitParentIdx));
+}
+
+std::vector<float> PlanetMath::elementwiseAdd(std::vector<float> a, std::vector<float> b)
+{
+	/*if (a.size() != b.size())
+	{
+		throw invali
+	}*/
+	for (int i = 0; i < a.size(); i++)
+	{
+		a[i] += b[i];
+	}
+	return a;
 }
 
 //bool PlanetMath::findEqual(std::vector<float> values, float value)
