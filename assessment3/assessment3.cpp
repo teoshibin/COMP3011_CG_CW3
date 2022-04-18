@@ -49,7 +49,7 @@ float prevMouseY;
 // scene 
 SceneState sceneState;
 vector<OrbitAnimator> animators;
-float earthOrbitDelay = 20;
+float earthOrbitDelay = 50;
 glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 
 int main(int argc, char** argv)
@@ -181,8 +181,8 @@ int main(int argc, char** argv)
 
 	// model hyper params				(tweak these to adjust scene)
 
-	float distanceModifier = 10;		// master distance margin scale
-	float earthScale = 10;				// master scale
+	float distanceModifier = 15;		// master distance margin scale
+	float earthScale = 7;				// master scale
 
 	// all these values have to change if customization structure is changed
 	int attributeCount = 7;
@@ -202,15 +202,15 @@ int main(int argc, char** argv)
 
 //      1   2		3		4		5		6		7
 		0,	0.5,	0,		1.f,	-1,		0,		0,	// sun
-		1,	1,		10,		1.f,	0,		1,		0,	// mercury
-		1,	1,		10,		1.f,	0,		2,		0,	// venus
-		1,	1,		10,		1.f,	0,		3,		0,	// earth
-		1,	1,		10,		1.f,	0,		4,		0,	// mars
-		1,	0.5,	80,		1.f,	0,		5,		0,	// jupiter
-		1,	0.5,	80,		1.f,	0,		6,		0,	// saturn
-		1,	1,		120,	1.f,	0,		7,		0,	// uranus
-		1,	1,		100,	1.f,	0,		8,		0,	// neptune
-		1,	1,		60,		1.f,	0,		9,		0,	// pluto
+		1,	1,		20,		1.f,	0,		1,		0,	// mercury
+		1,	1,		20,		1.f,	0,		2,		0,	// venus
+		1,	1,		20,		1.f,	0,		3,		0,	// earth
+		1,	1,		20,		1.f,	0,		4,		0,	// mars
+		1,	1,		60,		1.f,	0,		5,		0,	// jupiter
+		1,	1,		60,		1.f,	0,		6,		0,	// saturn
+		1,	1,		100,	1.f,	0,		7,		0,	// uranus
+		1,	1,		80,		1.f,	0,		8,		0,	// neptune
+		1,	1,		40,		1.f,	0,		9,		0,	// pluto
 		1,	1,		2,		1.f,	3,		10,		0,	// moon
 	};
 
@@ -312,7 +312,7 @@ int main(int argc, char** argv)
 		}
 	}
 
-	// calculate sum of all parents ascending node angle
+	// calculate sum of all parents ascending node angle and sum of all inlinations including it's own
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
 		if (renderedBodies[i].animatorIndex == -1) continue; // not animated
@@ -331,21 +331,18 @@ int main(int argc, char** argv)
 		int bodyConstantIndex = renderedBodies[i].bodyConstantIdx;
 		animators.push_back(
 			OrbitAnimator(delays[animatorIndex], bodyConstants[bodyConstantIndex].localOrbitalPeriod,
-				renderedBodies[i].ovalRatio, renderedBodies[i].orbitRadius,
-				m.sumAllInclinations(renderedBodies, bodyConstants, i))
+				renderedBodies[i].ovalRatio, renderedBodies[i].orbitRadius,	renderedBodies[i].allInclinationSum)
 		);
 	}
+
+	cout << "Scene Set up\n";
+	cout << "\nLoading Time: " << (int)glfwGetTime() - startLoadingTime << "s\n\n";
 
 
 	// ==================== RENDER LOOP =========================
 
 	glUseProgram(skyShaderProgram);
 	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // set texture to 0
-
-	cout << "Scene Set up\n";
-	cout << "\nLoading Time: " << (int)glfwGetTime() - startLoadingTime << "s\n\n";
-
-
 
 	sceneState.addSPlayTime(glfwGetTime());		// add asset loading time to paused time (rectify animation time)
 	sceneState.pauseScene(glfwGetTime(), true);
@@ -373,7 +370,6 @@ int main(int argc, char** argv)
 				// current orbiting object's parent index
 				int parentIdx = renderedBodies[i].orbitParentIdx;
 				int animatorIdx = renderedBodies[i].animatorIndex;
-				//std::vector<float>& parentPosition = renderedBodies[parentIdx].position;
 
 				// parent must update its animated position before the child is, thus parent index < child index
 				if (parentIdx > i)
