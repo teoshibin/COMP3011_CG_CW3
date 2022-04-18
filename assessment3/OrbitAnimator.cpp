@@ -94,8 +94,11 @@ void OrbitAnimator::updateOrbit(std::vector<float> orbit_origin, float current_m
 {
 	if (stepAngle(current_ms_time, &previous_orbit_timestamp, delay_per_orbit_angle, precision, &orbit_angle) || force)
 	{
-		float x = (sin(DEG2RAD(orbit_angle)) * orbit_radius * oval_ratio);
-		float y = (tan(DEG2RAD(orbit_tilt)) * x);
+		//float x = (sin(DEG2RAD(orbit_angle)) * orbit_radius * oval_ratio);
+		//float y = (tan(DEG2RAD(orbit_tilt)) * x);
+		float diag_x = sin(DEG2RAD(orbit_angle)) * orbit_radius * oval_ratio;
+		float x = cos(DEG2RAD(orbit_tilt)) * diag_x;
+		float y = sin(DEG2RAD(orbit_tilt)) * diag_x;
 		float z = (cos(DEG2RAD(orbit_angle)) * orbit_radius);
 		setOrbitPosition(x + orbit_origin[0], y + orbit_origin[1], z + orbit_origin[2]);
 	}

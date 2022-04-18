@@ -239,6 +239,7 @@ int main(int argc, char** argv)
 		1,	1,		2,		1.f,	10,	11,	1,	11, // 11. ufo 1
 		1,	1,		0.3,	1.05f,	10,	12,	1,	11, // 12. ufo 2
 		1,	1,		0.5,	1.f,	11,	12,	1,	11, // 13. ufo 3
+		1,	1,		-4,		1.f,	3,	13,	1,	11, // 13. ufo 4
 	};
 	// BUG: when 1. is 1 and 5. is not -1 will cause error
 	// TODO: add clockwise orbit into animator
@@ -253,23 +254,35 @@ int main(int argc, char** argv)
 
 	// add additional custom made body constants for additional objects
 	// this part is just pure creativity nothing technical
-	BodyConst ufoBc;
-	ufoBc.ascendingNode = 0;								// adjust orbit ascending starting point (degree)
-	ufoBc.axialTilt = 0;									// adjust axial tilt relative to orbit plane (degree)
-	ufoBc.inclination = 30;									// adjust orbit inclination angle (degree)
-	ufoBc.localOrbitalPeriod = 30;							// number of spins per orbit
-	ufoBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 8;	// orbit duration
-	ufoBc.radius = PConst::MOON_RADIUS / 3;						// object size (will be scaled relative to earth)
-	bodyConstants.push_back(ufoBc);	// 11
+	BodyConst customBc;
 
-	ufoBc.axialTilt = 40;
-	ufoBc.inclination = 40;
-	ufoBc.ascendingNode = 90;
-	ufoBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 10;
-	bodyConstants.push_back(ufoBc); // 12
+	// 11
+	customBc.ascendingNode = 0;								// adjust orbit ascending starting point (degree)
+	customBc.axialTilt = 0;									// adjust axial tilt relative to orbit plane (degree)
+	customBc.inclination = 30;									// adjust orbit inclination angle (degree)
+	customBc.localOrbitalPeriod = 30;							// number of spins per orbit
+	customBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 8;	// orbit duration
+	customBc.radius = PConst::MOON_RADIUS / 3;					// object size (will be scaled relative to earth)
+	bodyConstants.push_back(customBc);
 
+	// 12
+	customBc.axialTilt = 40;
+	customBc.inclination = 40;
+	customBc.ascendingNode = 90;
+	customBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 10;
+	bodyConstants.push_back(customBc);
 
-	if (bodiesCustomization.size() / attributeCount != bodyConstants.size()) cout << "customization params not equal size\n";
+	// 13
+	customBc.ascendingNode = 0;	
+	customBc.axialTilt = 0;		
+	customBc.inclination = 180;	
+	customBc.localOrbitalPeriod = 1;						
+	customBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 8;
+	customBc.radius = PConst::MOON_RADIUS / 3;				
+	bodyConstants.push_back(customBc);
+
+	if (bodiesCustomization.size() / attributeCount != bodyConstants.size()) 
+		cout << "customization params not equal size\n";
 
 	// parse configurations
 	int animIndexCount = 0;
