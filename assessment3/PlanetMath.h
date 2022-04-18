@@ -125,7 +125,8 @@ struct RenderedBody
 	// following ascending node of parent orbiting object 
 	// the result of not using this variable simply makes moon orbiting an 
 	// empty space while earth is shifted to it's ascending node angle
-	float parentAscendingNode = 0; // this will be calculated using recursion
+	float parentsAscendingNodeSum = 0; // this will be calculated using recursion
+	float allInclinationSum = 0; // make object stay perpendicular to it's orbit plane after the orbit is inclined
 
 	// animation
 	float scale = 1;

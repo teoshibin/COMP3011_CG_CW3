@@ -312,6 +312,17 @@ int main(int argc, char** argv)
 		}
 	}
 
+	// calculate sum of all parents ascending node angle
+	for (int i = 0; i < renderedBodies.size(); i++)
+	{
+		if (renderedBodies[i].animatorIndex == -1) continue; // not animated
+		int parentIndex = renderedBodies[i].orbitParentIdx;
+		renderedBodies[i].parentsAscendingNodeSum = m.sumAllAscendingNodes(
+			renderedBodies, bodyConstants, parentIndex);
+		renderedBodies[i].allInclinationSum = m.sumAllInclinations(
+			renderedBodies, bodyConstants, i);
+	}
+
 	// initialize animators
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
@@ -362,7 +373,7 @@ int main(int argc, char** argv)
 				// current orbiting object's parent index
 				int parentIdx = renderedBodies[i].orbitParentIdx;
 				int animatorIdx = renderedBodies[i].animatorIndex;
-				std::vector<float>& parentPosition = renderedBodies[parentIdx].position;
+				//std::vector<float>& parentPosition = renderedBodies[parentIdx].position;
 
 				// parent must update its animated position before the child is, thus parent index < child index
 				if (parentIdx > i)
@@ -372,7 +383,7 @@ int main(int argc, char** argv)
 				}
 
 				// animate orbit of current object with a origin of parent's position
-				animators[animatorIdx].animate(parentPosition, ms_time, 2, 5, firstTime);
+				animators[animatorIdx].animate(ms_time, 2, 5, firstTime);
 
 				// retrieve position
 				renderedBodies[i].position = animators[animatorIdx].getOrbitPosition();
@@ -421,27 +432,28 @@ int main(int argc, char** argv)
 			// if object is animated
 			else
 			{
+				RenderedBody& pr = renderedBodies[rb.orbitParentIdx];
 
 				glUseProgram(illumShaderProgram);
-				model = glm::mat4(1.f);																			
-				
+				model = glm::mat4(1.f);
+
 				// rotate using parents' ascending node to rectify orbit shift due to parent's shift of their own ascending node angle
-				// model = glm::rotate(model, glm::radians(ALL RECURSIVE SUM OF PARENT ASCENDING NODES), Yaxis);
-				
+				model = glm::rotate(model, glm::radians(rb.parentsAscendingNodeSum), Yaxis);
+
 				// move world centered orbit to body centered orbit (such as moon orbiting sun translate to moon orbiting earth)
-				// model = glm::translate(model, vecToVec3(PARENT POSITION HERE));
-				
+				model = glm::translate(model, vecToVec3(pr.position));
+
 				// rotate whole orbit to change orbit ascending starting point
 				model = glm::rotate(model, glm::radians(bc.ascendingNode), Yaxis);
 
-				// move orbit to world centered orbit position //TODO remove origin in orbit animator
-				model = glm::translate(model, vecToVec3(rb.position));					
-				
-				// create sphere tilt and add all parents' inclidnations
-				model = glm::rotate(model, glm::radians(bc.axialTilt + bc.inclination), Zaxis);
-				
+				// move orbit to world centered orbit position
+				model = glm::translate(model, vecToVec3(rb.position));
+
+				// create sphere tilt and add // TODO all parents' inclidnations
+				model = glm::rotate(model, glm::radians(bc.axialTilt + rb.allInclinationSum), Zaxis);
+
 				// create sphere spin
-				model = glm::rotate(model, glm::radians(rb.rotation), Yaxis);						
+				model = glm::rotate(model, glm::radians(rb.rotation), Yaxis);
 				
 				// scale to correct size
 				model = glm::scale(model, glm::vec3(rb.scale));										
