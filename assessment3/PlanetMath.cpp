@@ -125,20 +125,30 @@ float PlanetMath::getRelativeValue(float a1, float b1, float b2, float r)
 {
 	return a1 / b1 * b2 * r;
 }
+//
+//float PlanetMath::getMarginedRadius(float radiusA, float radiusB, float marginB, float modifierB)
+//{
+//	return 0.0f;
+//}
 
-float PlanetMath::getMarginedRadius(float radiusA, float radiusB, float marginB, float modifierB)
+float PlanetMath::sumAllAscendingNodes(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex)
 {
-	return 0.0f;
+	// if not more parent then do this (base case)
+	if (rb[targetIndex].orbitParentIdx == -1)
+	{
+		return bc[rb[targetIndex].bodyConstantIdx].ascendingNode;
+	}
+	return bc[rb[targetIndex].bodyConstantIdx].ascendingNode + sumAllAscendingNodes(rb, bc, rb[targetIndex].orbitParentIdx);
 }
 
-float PlanetMath::sumRecursiveParentInclination(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex)
+float PlanetMath::sumAllInclinations(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex)
 {
 	// if not more parent then do this (base case)
 	if (rb[targetIndex].orbitParentIdx == -1)
 	{
 		return bc[rb[targetIndex].bodyConstantIdx].inclination;
 	}
-	return bc[rb[targetIndex].bodyConstantIdx].inclination + sumRecursiveParentInclination(rb, bc, rb[targetIndex].orbitParentIdx);
+	return bc[rb[targetIndex].bodyConstantIdx].inclination + sumAllInclinations(rb, bc, rb[targetIndex].orbitParentIdx);
 }
 
 //bool PlanetMath::findEqual(std::vector<float> values, float value)

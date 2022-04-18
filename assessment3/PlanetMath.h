@@ -108,14 +108,24 @@ struct BodyConst
 	float localOrbitalPeriod;
 	float ascendingNode;
 	float inclination;
-	float axialTilt;	
+	float axialTilt;
 };
 
 struct RenderedBody
 {
-	// render
+	// === render ===
+	
+	// body orbiting position
 	std::vector<float> position;
+
+	// body spin rotation
 	float rotation = 0;
+
+	// special variable to fix nested orbit object (such as moon) not 
+	// following ascending node of parent orbiting object 
+	// the result of not using this variable simply makes moon orbiting an 
+	// empty space while earth is shifted to it's ascending node angle
+	float parentAscendingNode = 0; // this will be calculated using recursion
 
 	// animation
 	float scale = 1;
@@ -138,10 +148,11 @@ public:
 	int getPlanet(std::string name);
 	float getRelativeValue(float a1, float b1, float b2);
 	float getRelativeValue(float a1, float b1, float b2, float r);
-	float getMarginedRadius(float radiusA, float radiusB, float marginB, float modifierB);
+	//float getMarginedRadius(float radiusA, float radiusB, float marginB, float modifierB);
 	//bool findEqual(std::vector<float> values, float value);
 	//std::vector<float> batchGetRelativeValue(std::vector<float> as1, float bs1, float bs2);
-	float sumRecursiveParentInclination(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex);
+	float sumAllInclinations(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex);
+	float sumAllAscendingNodes(std::vector<RenderedBody> rb, std::vector<BodyConst> bc, int targetIndex);
 private:
 	std::map < std::string, int> keyMap
 	{

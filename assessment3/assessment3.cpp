@@ -177,14 +177,14 @@ int main(int argc, char** argv)
 	PlanetMath m;
 
 	// model constants
-	float SPHERE_OBJECT_RADIUS = 2;		// 3d sphere radius designed in blender (do not change)
+	float SPHERE_OBJECT_RADIUS = 2;		// 3d vertex sphere radius (do not change)
 
 	// model hyper params				(tweak these to adjust scene)
 
 	float distanceModifier = 10;		// master distance margin scale
 	float earthScale = 10;				// master scale
 
-	// all these values have to change if customization rows are changed
+	// all these values have to change if customization structure is changed
 	int attributeCount = 7;
 	int earthIdx = 3;
 	int sunIdx = 0;
@@ -279,7 +279,7 @@ int main(int argc, char** argv)
 			}
 		}
 
-		// calculate orbit radius, if this body is the first object that orbits it's parent then this
+		// calculate orbit radius, if this body is the first object that orbits it's parent then do this
 		if (preIdx == -1)
 		{
 			renderedBodies[i].orbitRadius =
@@ -321,7 +321,7 @@ int main(int argc, char** argv)
 		animators.push_back(
 			OrbitAnimator(delays[animatorIndex], bodyConstants[bodyConstantIndex].localOrbitalPeriod,
 				renderedBodies[i].ovalRatio, renderedBodies[i].orbitRadius,
-				m.sumRecursiveParentInclination(renderedBodies, bodyConstants, i))
+				m.sumAllInclinations(renderedBodies, bodyConstants, i))
 		);
 	}
 
@@ -367,7 +367,7 @@ int main(int argc, char** argv)
 				// parent must update its animated position before the child is, thus parent index < child index
 				if (parentIdx > i)
 				{
-					cout << "orbited celestial bodies must be animated before the orbiting child is\n";
+					cout << "revolved celestial bodies must be animated before the it's children\n";
 					exit(-1);
 				}
 
@@ -423,16 +423,32 @@ int main(int argc, char** argv)
 			{
 
 				glUseProgram(illumShaderProgram);
-				model = glm::mat4(1.f);
+				model = glm::mat4(1.f);																			
+				
+				// rotate using parents' ascending node to rectify orbit shift due to parent's shift of their own ascending node angle
+				// model = glm::rotate(model, glm::radians(ALL RECURSIVE SUM OF PARENT ASCENDING NODES), Yaxis);
+				
+				// move world centered orbit to body centered orbit (such as moon orbiting sun translate to moon orbiting earth)
+				// model = glm::translate(model, vecToVec3(PARENT POSITION HERE));
+				
+				// rotate whole orbit to change orbit ascending starting point
 				model = glm::rotate(model, glm::radians(bc.ascendingNode), Yaxis);
-				model = glm::translate(model, vecToVec3(rb.position));
+
+				// move orbit to world centered orbit position //TODO remove origin in orbit animator
+				model = glm::translate(model, vecToVec3(rb.position));					
+				
+				// create sphere tilt and add all parents' inclidnations
 				model = glm::rotate(model, glm::radians(bc.axialTilt + bc.inclination), Zaxis);
-				model = glm::rotate(model, glm::radians(rb.rotation), Yaxis);
-				model = glm::scale(model, glm::vec3(rb.scale));
+				
+				// create sphere spin
+				model = glm::rotate(model, glm::radians(rb.rotation), Yaxis);						
+				
+				// scale to correct size
+				model = glm::scale(model, glm::vec3(rb.scale));										
 				glSetLightingConfig(illumShaderProgram, lightPos, Camera.Position);
 				glSetModelViewProjection(illumShaderProgram, model, view, projection);
 				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[bcIdx][0], vertexSize[rb.VAOIdx]);
-				//TODO use other textures
+				//TODO use multiple textures
 			}
 		}
 
@@ -590,6 +606,7 @@ unsigned int loadCubemap(vector<string> faces)
 
 void displayLoadingScreen(GLFWwindow* window)
 {
+	// this is not refactored and will never be
 	vector<float> rectVert = getRectangle();
 	GLuint loadingTexture = loadTexture("objects/loading_screen/loading.png");
 	unsigned int loadingShaderProgram = LoadShader("load.vert", "load.frag");
