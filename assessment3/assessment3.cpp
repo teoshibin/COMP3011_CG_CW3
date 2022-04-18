@@ -62,7 +62,9 @@ vector<BodyConst> bodyConstants = m.getSolarSystemConstants();
 int main(int argc, char** argv)
 {
 
-	// ======================= SETUP ======================		
+	// ======================= SETUP ======================	
+
+	srand(time(NULL));
 	GLFWwindow* window = myCreateWindow(
 		WINDOW_WIDTH, WINDOW_HEIGHT, "Space Scene");	// create window
 	mySetWindowCenter(window);							// adjust window position
@@ -187,7 +189,7 @@ int main(int argc, char** argv)
 	// model hyper params				(tweak these to adjust scene)
 
 	float distanceModifier = 15;		// master distance margin scale
-	float earthScale = 7;				// master scale
+	float earthScale = 15;				// master scale
 
 	// all these values have to change if customization structure is changed
 	int attributeCount = 7;
@@ -204,7 +206,7 @@ int main(int argc, char** argv)
 		// rules: none orbiting first and revovled object must come before orbiting object as some values are depend on orbited objects
 
 //      1   2		3		4		5		6		7
-		0,	0.5,	0,		1.f,	-1,		0,		0,	// sun
+		0,	0.3,	0,		1.f,	-1,		0,		0,	// sun
 		1,	1,		20,		1.f,	0,		1,		0,	// mercury
 		1,	1,		20,		1.f,	0,		2,		0,	// venus
 		1,	1,		20,		1.f,	0,		3,		0,	// earth
@@ -336,6 +338,7 @@ int main(int argc, char** argv)
 			OrbitAnimator(delays[animatorIndex], bodyConstants[bodyConstantIndex].localOrbitalPeriod,
 				renderedBodies[i].ovalRatio, renderedBodies[i].orbitRadius,	renderedBodies[i].allInclinationSum)
 		);
+		animators[animatorIndex].addOrbitAngle(rand() % 360);
 	}
 
 	cout << "Scene Set up\n";
@@ -348,8 +351,7 @@ int main(int argc, char** argv)
 	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // set texture to 0
 
 	sceneState.addSPlayTime(glfwGetTime());		// add asset loading time to paused time (rectify animation time)
-	sceneState.addSPlayTime(rand())
-    //sceneState.pauseScene(glfwGetTime(), true);
+	//sceneState.pauseScene(glfwGetTime(), true);
 
 	glm::vec3 Xaxis = glm::vec3(1.f, 0.f, 0.f);
 	glm::vec3 Yaxis = glm::vec3(0.f, 1.f, 0.f);
