@@ -81,7 +81,7 @@ int main(int argc, char** argv)
 
 	// ======================= SETUP ======================	
 
-	srand(time(NULL));
+	srand((int)time(NULL));
 	GLFWwindow* window = myCreateWindow(
 		WINDOW_WIDTH, WINDOW_HEIGHT, "Space Scene");	// create window
 	mySetWindowCenter(window);							// adjust window position
@@ -102,11 +102,11 @@ int main(int argc, char** argv)
 	cout << "Loading Objects...\n";
 	try
 	{
-		sphereObj = ofr.read("objects/solar_system/sphere.obj");
-		ufoObj = ofr.read("objects/ufo_1/ufo_1.obj");
-		rocket2Obj = ofr.read("objects/rocket_2/rocket_2.obj");
-		saturnRingObj = ofr.read("objects/solar_system/ring_huge.obj");
-		uranusRingObj = ofr.read("objects/solar_system/ring_small.obj");
+		sphereObj = ofr.read("resources/solar_system/sphere.obj");
+		ufoObj = ofr.read("resources/ufo_1/ufo_1.obj");
+		rocket2Obj = ofr.read("resources/rocket_2/rocket_2.obj");
+		saturnRingObj = ofr.read("resources/solar_system/ring_huge.obj");
+		uranusRingObj = ofr.read("resources/solar_system/ring_small.obj");
 	}
 	catch (const std::exception& e)
 	{
@@ -125,38 +125,38 @@ int main(int argc, char** argv)
 
 	// ======== load shaders =========
 	cout << "Loading Shaders...\n";
-	unsigned int illumShaderProgram = LoadShader("illuminated.vert", "illuminated.frag");
-	unsigned int basicShaderProgram = LoadShader("basic.vert", "basic.frag");
-	unsigned int skyShaderProgram = LoadShader("sky.vert", "sky.frag");
+	unsigned int illumShaderProgram = LoadShader("shaders/illuminated.vert", "shaders/illuminated.frag");
+	unsigned int basicShaderProgram = LoadShader("shaders/basic.vert", "shaders/basic.frag");
+	unsigned int skyShaderProgram = LoadShader("shaders/sky.vert", "shaders/sky.frag");
 	cout << "Shaders Loaded\n\n";
 
 	// ======= load all textures =======
 	cout << "Loading Textures...\n";
-	GLuint sunTexture = loadTexture("objects/solar_system/textures/2k_sun.jpg");
-	GLuint mercuryTexture = loadTexture("objects/solar_system/textures/2k_mercury.jpg");
-	GLuint venusTexture = loadTexture("objects/solar_system/textures/2k_venus_surface.jpg");
-	GLuint venusAtmosphereTexture = loadTexture("objects/solar_system/textures/2k_venus_atmosphere.jpg");
-	GLuint earthTexture = loadTexture("objects/solar_system/textures/2k_earth_daymap.jpg");
-	GLuint earthNightTexture = loadTexture("objects/solar_system/textures/2k_earth_nightmap.jpg");
-	GLuint earthCloudsTexture = loadTexture("objects/solar_system/textures/2k_earth_clouds.jpg");
-	GLuint moonTexture = loadTexture("objects/solar_system/textures/2k_moon.jpg");
-	GLuint marsTexture = loadTexture("objects/solar_system/textures/2k_mars.jpg");
-	GLuint jupiterTexture = loadTexture("objects/solar_system/textures/2k_jupiter.jpg");
-	GLuint saturnTexture = loadTexture("objects/solar_system/textures/2k_saturn.jpg");
-	GLuint saturnRingTexture = loadTexture("objects/solar_system/textures/saturn_ring_2.png");
-	GLuint uranusTexture = loadTexture("objects/solar_system/textures/2k_uranus.jpg");
-	GLuint uranusRingTexture = loadTexture("objects/solar_system/textures/uranus_ring_2.png");
-	GLuint neptuneTexture = loadTexture("objects/solar_system/textures/2k_neptune.jpg");
-	GLuint plutoTexture = loadTexture("objects/solar_system/textures/pluto.jpg");
-	GLuint ufoTexture = loadTexture("objects/ufo_1/ufo_kd.jpg");
-	GLuint rocket2Texture = loadTexture("objects/rocket_2/rocket.jpg");
+	GLuint sunTexture = loadTexture("resources/solar_system/textures/2k_sun.jpg");
+	GLuint mercuryTexture = loadTexture("resources/solar_system/textures/2k_mercury.jpg");
+	GLuint venusTexture = loadTexture("resources/solar_system/textures/2k_venus_surface.jpg");
+	GLuint venusAtmosphereTexture = loadTexture("resources/solar_system/textures/2k_venus_atmosphere.jpg");
+	GLuint earthTexture = loadTexture("resources/solar_system/textures/2k_earth_daymap.jpg");
+	GLuint earthNightTexture = loadTexture("resources/solar_system/textures/2k_earth_nightmap.jpg");
+	GLuint earthCloudsTexture = loadTexture("resources/solar_system/textures/2k_earth_clouds.jpg");
+	GLuint moonTexture = loadTexture("resources/solar_system/textures/2k_moon.jpg");
+	GLuint marsTexture = loadTexture("resources/solar_system/textures/2k_mars.jpg");
+	GLuint jupiterTexture = loadTexture("resources/solar_system/textures/2k_jupiter.jpg");
+	GLuint saturnTexture = loadTexture("resources/solar_system/textures/2k_saturn.jpg");
+	GLuint saturnRingTexture = loadTexture("resources/solar_system/textures/saturn_ring_2.png");
+	GLuint uranusTexture = loadTexture("resources/solar_system/textures/2k_uranus.jpg");
+	GLuint uranusRingTexture = loadTexture("resources/solar_system/textures/uranus_ring_2.png");
+	GLuint neptuneTexture = loadTexture("resources/solar_system/textures/2k_neptune.jpg");
+	GLuint plutoTexture = loadTexture("resources/solar_system/textures/pluto.jpg");
+	GLuint ufoTexture = loadTexture("resources/ufo_1/ufo_kd.jpg");
+	GLuint rocket2Texture = loadTexture("resources/rocket_2/rocket.jpg");
 	vector<string> files = {
-		"skybox/right.jpg",
-		"skybox/left.jpg",
-		"skybox/bottom.jpg",
-		"skybox/top.jpg",
-		"skybox/front.jpg",
-		"skybox/back.jpg"
+		"resources/skybox/right.jpg",
+		"resources/skybox/left.jpg",
+		"resources/skybox/bottom.jpg",
+		"resources/skybox/top.jpg",
+		"resources/skybox/front.jpg",
+		"resources/skybox/back.jpg"
 	};
 	GLuint skyTexture = loadCubemap(files);
 	cout << "Textures Loaded\n\n";
@@ -233,12 +233,13 @@ int main(int argc, char** argv)
 	int attributeCount = 9;
 	vector<float> bodiesCustomization{
 
-		// a. is animated boolean
+		// a. is animated boolean 
 		// s. scale
 		// m. margin, the distance between the previous orbiting planet and 
-		//		current planet (this shouldn't include their radius)
+		//		current planet
 		// ov. oval ratio, major minor axis ratio
-		// or. orbiting parent index (-1 not orbiting anything) [refer to this array]
+		// pr. parent index (-1: not orbiting, *: orbiting when a==1, following when a==0) 
+		//		[refer to this array]
 		// bc. body constant index (BodyConst class) [refer to "bodyConstants" variable]
 		// vao. VAO and vertex size index [refer to "vertexSize" variable]
 		// tx. texture index [refer to "textures" variable]
@@ -249,26 +250,25 @@ int main(int argc, char** argv)
 		// rules: orbited object must come before orbiting object as some calculations 
 		//			are depending on their primary object
 
-		//  a   s		m		ov		or	bc	vao tx	rd
-			0,	0.3,	0,		1.f,	-1,	0,	0,	0,	1, // 0. sun
-			1,	1,		20,		1.f,	0,	1,	0,	1,	1, // 1. mercury
-			1,	1,		20,		1.f,	0,	2,	0,	2,	1, // 2. venus
-			1,	1,		20,		1.f,	0,	3,	0,	3,	1, // 3. earth
-			1,	1,		20,		1.f,	0,	4,	0,	4,	1, // 4. mars
-			1,	1,		60,		1.f,	0,	5,	0,	5,	1, // 5. jupiter
-			1,	1,		60,		1.f,	0,	6,	0,	6,	1, // 6. saturn
-			1,	1,		100,	1.f,	0,	7,	0,	7,	1, // 7. uranus
-			1,	1,		80,		1.f,	0,	8,	0,	8,	1, // 8. neptune
-			1,	1,		40,		1.f,	0,	9,	0,	9,	1, // 9. pluto
-			1,	1,		10,		1.f,	3,	10,	0,	10, 0, // 10. moon
-			1,	1,		2,		1.f,	10,	11,	1,	11, 1, // 11. ufo 
-			1,	1,		0.3,	1.05f,	10,	12,	1,	11, 1, // 12. ufo 
-			1,	1,		0.5,	1.f,	11,	12,	1,	11, 1, // 13. ufo 
-			1,	0.5,	3,		1.f,	4,	13,	2,	12, 0, // 14. rocket 2
-			0,	0.9,	0,		1.f,	6,	14,	3,	13, 1, // 15. saturn ring
-			0,	0.9,	0,		1.f,	7,	15,	4,	14, 1, // 16. uranus ring
+		//  a		s		m		ov		pr		bc		vao		tx		rd
+			0.f,	0.3f,	0.f,	1.f,	-1.f,	0.f,	0.f,	0.f,	1.f, // 0. sun
+			1.f,	1.f,	20.f,	1.f,	0.f,	1.f,	0.f,	1.f,	1.f, // 1. mercury
+			1.f,	1.f,	20.f,	1.f,	0.f,	2.f,	0.f,	2.f,	1.f, // 2. venus
+			1.f,	1.f,	20.f,	1.f,	0.f,	3.f,	0.f,	3.f,	1.f, // 3. earth
+			1.f,	1.f,	20.f,	1.f,	0.f,	4.f,	0.f,	4.f,	1.f, // 4. mars
+			1.f,	1.f,	60.f,	1.f,	0.f,	5.f,	0.f,	5.f,	1.f, // 5. jupiter
+			1.f,	1.f,	60.f,	1.f,	0.f,	6.f,	0.f,	6.f,	1.f, // 6. saturn
+			1.f,	1.f,	100.f,	1.f,	0.f,	7.f,	0.f,	7.f,	1.f, // 7. uranus
+			1.f,	1.f,	80.f,	1.f,	0.f,	8.f,	0.f,	8.f,	1.f, // 8. neptune
+			1.f,	1.f,	40.f,	1.f,	0.f,	9.f,	0.f,	9.f,	1.f, // 9. pluto
+			1.f,	1.f,	10.f,	1.f,	3.f,	10.f,	0.f,	10.f,	0.f, // 10. moon
+			1.f,	1.f,	2.f,	1.f,	10.f,	11.f,	1.f,	11.f,	1.f, // 11. ufo 
+			1.f,	1.f,	0.3f,	1.05f,	10.f,	12.f,	1.f,	11.f,	1.f, // 12. ufo 
+			1.f,	1.f,	0.5f,	1.f,	11.f,	12.f,	1.f,	11.f,	1.f, // 13. ufo 
+			1.f,	0.5,	3.f,	1.f,	4.f,	13.f,	2.f,	12.f,	0.f, // 14. rocket 2
+			0.f,	0.9,	0.f,	1.f,	6.f,	14.f,	3.f,	13.f,	1.f, // 15. saturn ring
+			0.f,	0.9,	0.f,	1.f,	7.f,	15.f,	4.f,	14.f,	1.f, // 16. uranus ring
 	};
-	// BUG: when 1. is 1 and 5. is not -1 will cause error
 	// TODO: add planet rings
 	// TODO: multiple lights
 	// TODO: earth use multi textures
@@ -774,8 +774,8 @@ void displayLoadingScreen(GLFWwindow* window)
 {
 	// this is not refactored and will never be
 	vector<float> rectVert = getRectangle();
-	GLuint loadingTexture = loadTexture("objects/loading_screen/loading.png");
-	unsigned int loadingShaderProgram = LoadShader("load.vert", "load.frag");
+	GLuint loadingTexture = loadTexture("resources/loading_screen/loading.png");
+	unsigned int loadingShaderProgram = LoadShader("shaders/load.vert", "shaders/load.frag");
 	unsigned int loadVAO, loadVBO;
 	glSetupVertexObject(loadVAO, loadVBO, rectVert, vector<int>{3, 2});
 

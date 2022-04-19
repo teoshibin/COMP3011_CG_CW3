@@ -50,32 +50,6 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <None Include="load.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="load.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="sky.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="sky.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="basic.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="basic.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="illuminated.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="illuminated.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -118,5 +92,31 @@
     <ClInclude Include="PlanetMath.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\basic.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\basic.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\illuminated.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\illuminated.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\load.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\load.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\sky.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\sky.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

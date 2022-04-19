@@ -161,16 +161,6 @@
     <ClCompile Include="stb_image.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="illuminated.frag" />
-    <None Include="illuminated.vert" />
-    <None Include="load.frag" />
-    <None Include="load.vert" />
-    <None Include="sky.frag" />
-    <None Include="sky.vert" />
-    <None Include="basic.frag" />
-    <None Include="basic.vert" />
-  </ItemGroup>
-  <ItemGroup>
     <ClInclude Include="bitmap.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="FlyThroughCamera.h" />
@@ -185,6 +175,16 @@
     <ClInclude Include="texture.h" />
     <ClInclude Include="util.h" />
     <ClInclude Include="window.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="shaders\basic.frag" />
+    <None Include="shaders\basic.vert" />
+    <None Include="shaders\illuminated.frag" />
+    <None Include="shaders\illuminated.vert" />
+    <None Include="shaders\load.frag" />
+    <None Include="shaders\load.vert" />
+    <None Include="shaders\sky.frag" />
+    <None Include="shaders\sky.vert" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
