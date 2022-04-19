@@ -120,7 +120,7 @@ struct RenderedBody
 	// === render ===
 	
 	// body orbiting position
-	std::vector<float> position;
+	std::vector<float> position{0.f,0.f,0.f};
 
 	// body spin rotation
 	float rotation = 0;

@@ -43,6 +43,10 @@ void main()
 {
 	vec4 texCol = texture(Texture,tex);
 	
+	// create alpha segmentation
+	if (texCol.a < 0.3)
+		discard;
+
 	//float phong = directionalIllumination(lighting, nor, fragPos);
 	//float phong = spotIllumination(lighting, nor, fragPos);
 	float phong = positionalIllumination(light, nor, fragPos);

@@ -98,13 +98,15 @@ int main(int argc, char** argv)
 
 	// ========= load objects =========
 	ObjFileReader ofr;
-	ObjectFileData sphereObj, ufoObj, rocket2Obj;
+	ObjectFileData sphereObj, ufoObj, rocket2Obj, saturnRingObj, uranusRingObj;
 	cout << "Loading Objects...\n";
 	try
 	{
 		sphereObj = ofr.read("objects/solar_system/sphere.obj");
 		ufoObj = ofr.read("objects/ufo_1/ufo_1.obj");
 		rocket2Obj = ofr.read("objects/rocket_2/rocket_2.obj");
+		saturnRingObj = ofr.read("objects/solar_system/ring_huge.obj");
+		uranusRingObj = ofr.read("objects/solar_system/ring_small.obj");
 	}
 	catch (const std::exception& e)
 	{
@@ -116,6 +118,8 @@ int main(int argc, char** argv)
 	vector<float>& sphereVert = sphereObj.subObjects[0].expandedVertices;
 	vector<float>& ufoVert = ufoObj.subObjects[0].expandedVertices;
 	vector<float>& rocket2Vert = rocket2Obj.subObjects[0].expandedVertices;
+	vector<float>& saturnRingVert = saturnRingObj.subObjects[0].expandedVertices;
+	vector<float>& uranusRingVert = uranusRingObj.subObjects[0].expandedVertices;
 	cout << "Objects Loaded\n\n";
 
 
@@ -139,9 +143,9 @@ int main(int argc, char** argv)
 	GLuint marsTexture = loadTexture("objects/solar_system/textures/2k_mars.jpg");
 	GLuint jupiterTexture = loadTexture("objects/solar_system/textures/2k_jupiter.jpg");
 	GLuint saturnTexture = loadTexture("objects/solar_system/textures/2k_saturn.jpg");
-	GLuint saturnRingTexture = loadTexture("objects/solar_system/textures/2k_saturn_ring_alpha.png");
+	GLuint saturnRingTexture = loadTexture("objects/solar_system/textures/saturn_ring_2.png");
 	GLuint uranusTexture = loadTexture("objects/solar_system/textures/2k_uranus.jpg");
-	GLuint uranusRingTexture = loadTexture("objects/solar_system/textures/uranus_ring.jpg");
+	GLuint uranusRingTexture = loadTexture("objects/solar_system/textures/uranus_ring_2.png");
 	GLuint neptuneTexture = loadTexture("objects/solar_system/textures/2k_neptune.jpg");
 	GLuint plutoTexture = loadTexture("objects/solar_system/textures/pluto.jpg");
 	GLuint ufoTexture = loadTexture("objects/ufo_1/ufo_kd.jpg");
@@ -185,6 +189,10 @@ int main(int argc, char** argv)
 	glSetupVertexObject(ufoVAO, ufoVBO, ufoVert, vector<int>{3, 2, 3});
 	unsigned int rocket2VAO, rocket2VBO;
 	glSetupVertexObject(rocket2VAO, rocket2VBO, rocket2Vert, vector<int>{3,2,3});
+	unsigned int saturnRingVAO, saturnRingVBO;
+	glSetupVertexObject(saturnRingVAO, saturnRingVBO, saturnRingVert, vector<int>{3, 2, 3});
+	unsigned int uranusRingVAO, uranusRingVBO;
+	glSetupVertexObject(uranusRingVAO, uranusRingVBO, uranusRingVert, vector<int>{3, 2, 3});
 	unsigned int skyVAO, skyVBO;
 	glSetupVertexObject(skyVAO, skyVBO, skyboxVert, vector<int>{3});
 
@@ -192,12 +200,16 @@ int main(int argc, char** argv)
 		sphereVAO,
 		ufoVAO,
 		rocket2VAO,
+		saturnRingVAO,
+		uranusRingVAO,
 	};
 
 	vector<int> vertexSize{
 		(int)sphereVert.size() / 8,
 		(int)ufoVert.size() / 8,
 		(int)rocket2Vert.size() / 8,
+		(int)saturnRingVert.size() / 8,
+		(int)uranusRingVert.size() / 8,
 	};
 
 	// remove binding
@@ -214,30 +226,30 @@ int main(int argc, char** argv)
 
 	// model hyper params				(tweak these to adjust scene)
 
-	float distanceModifier = 60;		// master distance margin scale
+	float distanceModifier = 70;		// master distance margin scale
 	float earthScale = 60;				// master scale
 
 	// all these values have to change if customization structure is changed
 	int attributeCount = 9;
 	vector<float> bodiesCustomization{
 
-		// 1. is animated boolean
-		// 2. scale
-		// 3. margin, the distance between the previous orbiting planet and 
+		// a. is animated boolean
+		// s. scale
+		// m. margin, the distance between the previous orbiting planet and 
 		//		current planet (this shouldn't include their radius)
-		// 4. oval ratio, major minor axis ratio
-		// 5. orbiting parent index (-1 not orbiting anything) [refer to this array]
-		// 6. body constant index (BodyConst class) [refer to "bodyConstants" variable]
-		// 7. VAO and vertex size index [refer to "vertexSize" variable]
-		// 8. texture index [refer to "textures" variable]
-		// 9. randomize spin angle boolean (this is the switch to enable fixed spin 
+		// ov. oval ratio, major minor axis ratio
+		// or. orbiting parent index (-1 not orbiting anything) [refer to this array]
+		// bc. body constant index (BodyConst class) [refer to "bodyConstants" variable]
+		// vao. VAO and vertex size index [refer to "vertexSize" variable]
+		// tx. texture index [refer to "textures" variable]
+		// rd. randomize spin angle boolean (this is the switch to enable fixed spin 
 		//		angle initialization relative to orbit angle, as some object have to be 
 		//		parpendicular to other object to make sense)
 		//
 		// rules: orbited object must come before orbiting object as some calculations 
 		//			are depending on their primary object
 
-		//  1   2		3		4		5	6	7   8	9
+		//  a   s		m		ov		or	bc	vao tx	rd
 			0,	0.3,	0,		1.f,	-1,	0,	0,	0,	1, // 0. sun
 			1,	1,		20,		1.f,	0,	1,	0,	1,	1, // 1. mercury
 			1,	1,		20,		1.f,	0,	2,	0,	2,	1, // 2. venus
@@ -252,12 +264,13 @@ int main(int argc, char** argv)
 			1,	1,		2,		1.f,	10,	11,	1,	11, 1, // 11. ufo 
 			1,	1,		0.3,	1.05f,	10,	12,	1,	11, 1, // 12. ufo 
 			1,	1,		0.5,	1.f,	11,	12,	1,	11, 1, // 13. ufo 
-			1,	0.5,	3,		1.f,	4,	13,	2,	12, 0, // 13. rocket 2
-
+			1,	0.5,	3,		1.f,	4,	13,	2,	12, 0, // 14. rocket 2
+			0,	0.9,	0,		1.f,	6,	14,	3,	13, 1, // 15. saturn ring
+			0,	0.9,	0,		1.f,	7,	15,	4,	14, 1, // 16. uranus ring
 	};
 	// BUG: when 1. is 1 and 5. is not -1 will cause error
-	// TODO: 
 	// TODO: add planet rings
+	// TODO: multiple lights
 	// TODO: earth use multi textures
 
 	renderedBodies.resize(bodiesCustomization.size() / attributeCount);
@@ -296,8 +309,20 @@ int main(int argc, char** argv)
 	customBc.defaultSpinAngle = 90;	 // spin angle relative to orbit angle (make rocket perpendicular to orbit center)
 	bodyConstants.push_back(customBc);
 
-	if (bodiesCustomization.size() / attributeCount != bodyConstants.size()) 
-		cout << "customization params not equal size\n";
+	// 14
+	customBc.ascendingNode = 0;
+	customBc.axialTilt = 2;
+	customBc.inclination = 0;
+	customBc.radius = PConst::SATURN_RADIUS;
+	bodyConstants.push_back(customBc);
+
+	// 15
+	customBc.ascendingNode = 0;
+	customBc.axialTilt = PConst::URANUS_AXIAL_TILT;
+	customBc.inclination = 0;
+	customBc.radius = PConst::URANUS_RADIUS;
+	customBc.defaultSpinAngle = 0;
+	bodyConstants.push_back(customBc);
 
 
 	// ========== math section ============
@@ -344,6 +369,7 @@ int main(int argc, char** argv)
 	// calculate orbit radius distance for individual bodies
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
+		// TODO following object
 		if (renderedBodies[i].orbitParentIdx == -1) continue;
 
 		// find last previous orbiting body that has the same parent 
@@ -394,7 +420,8 @@ int main(int argc, char** argv)
 	// calculate sum of all parents ascending node angle and sum of all inlinations including it's own
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
-		if (renderedBodies[i].animatorIdx == -1) continue; // not animated
+		// not animated and not following other object
+		if (renderedBodies[i].animatorIdx == -1 && renderedBodies[i].orbitParentIdx == -1) continue; 
 		int parentIndex = renderedBodies[i].orbitParentIdx;
 		renderedBodies[i].parentsAscendingNodeSum = m.sumAllAscendingNodes(
 			renderedBodies, bodyConstants, parentIndex);
@@ -443,10 +470,18 @@ int main(int argc, char** argv)
 		{
 			float ms_time = (float)sceneState.getMsPlayTime(glfwGetTime()); // get animation time
 
+			// animate all objects
 			for (int i = 0; i < renderedBodies.size(); i++)
 			{
-				// skip none animated objects
+				// if object is not aniamated and not orbiting anithing then skip
 				if (renderedBodies[i].animatorIdx == -1) continue;
+
+				// if object is not animated but orbiting something then it must be following it
+				if (renderedBodies[i].animatorIdx == -1 && renderedBodies[i].orbitParentIdx != -1)
+				{
+					renderedBodies[i].position = renderedBodies[renderedBodies[i].orbitParentIdx].position;
+					continue;
+				}
 
 				// current orbiting object's parent index
 				int parentIdx = renderedBodies[i].orbitParentIdx;
@@ -491,8 +526,8 @@ int main(int argc, char** argv)
 			BodyConst& bc = bodyConstants[bcIdx];
 			RenderedBody& rb = renderedBodies[i];
 
-			// if object is not animated
-			if (renderedBodies[i].animatorIdx == -1)
+			// if object is not animated and not following any other object
+			if (renderedBodies[i].animatorIdx == -1 && renderedBodies[i].orbitParentIdx == -1)
 			{
 				// if object is light source use different shader, default to illum shader
 				unsigned int shaderProg = illumShaderProgram;
@@ -500,14 +535,14 @@ int main(int argc, char** argv)
 
 				glUseProgram(shaderProg);
 				model = glm::mat4(1.f);
-				model = glm::translate(model, vecToVec3(rb.position));
+				model = glm::translate(model, vecToVec3(rb.position)); // sum all position
 				model = glm::rotate(model, glm::radians(bc.axialTilt), Zaxis);
 				model = glm::scale(model, glm::vec3(rb.scale));
 				glSetModelViewProjection(shaderProg, model, view, projection);
 				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
 
 			}
-			// if object is animated
+			// if object is animated or following animated object
 			else
 			{
 				RenderedBody& pr = renderedBodies[rb.orbitParentIdx];
@@ -541,16 +576,6 @@ int main(int argc, char** argv)
 				//TODO use multiple textures
 			}
 		}
-
-		// ufo
-		//glUseProgram(illumShaderProgram);
-		//model = glm::mat4(1.f);
-		//model = glm::translate(model, glm::vec3(earthPos.x, earthPos.y + earthScale*2, earthPos.z));
-		//model = glm::scale(model, glm::vec3(earthScale/10.f));
-		//glSetLightingConfig(illumShaderProgram, lightPos, Camera.Position);
-		//glSetModelViewProjection(illumShaderProgram, model, view, projection);
-		//glDrawVertexTriangles(ufoVAO, ufoTexture, ufoVert.size() / 8);
-
 
 		// skybox (contains gl code)
 		displaySkyBox(skyVAO, skyTexture, skyShaderProgram, view, projection);
