@@ -103,12 +103,16 @@ namespace PConst
 
 struct BodyConst
 {
+	// standard config
 	float radius;
 	float orbitalPeriod;
 	float localOrbitalPeriod;
 	float ascendingNode;
 	float inclination;
 	float axialTilt;
+
+	// special config
+	float defaultSpinAngle = 0.f; // spin angle relative to orbit angle
 };
 
 struct RenderedBody
@@ -120,6 +124,7 @@ struct RenderedBody
 
 	// body spin rotation
 	float rotation = 0;
+	bool randomSpinAngle = true;
 
 	// special variable to fix nested orbit object (such as moon) not 
 	// following ascending node of parent orbiting object 

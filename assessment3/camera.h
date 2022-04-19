@@ -23,7 +23,7 @@ struct SCamera
 	float Yaw;
 	float Pitch;
 
-	float MovementSpeed = 1.f;
+	float MovementSpeed = 10.f;
 	float MouseSensitivity = .05f;
 	float FOV = 70.f;
 

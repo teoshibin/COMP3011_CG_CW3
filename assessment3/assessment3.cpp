@@ -98,12 +98,13 @@ int main(int argc, char** argv)
 
 	// ========= load objects =========
 	ObjFileReader ofr;
-	ObjectFileData sphereObj, ufoObj;
+	ObjectFileData sphereObj, ufoObj, rocket2Obj;
 	cout << "Loading Objects...\n";
 	try
 	{
 		sphereObj = ofr.read("objects/solar_system/sphere.obj");
 		ufoObj = ofr.read("objects/ufo_1/ufo_1.obj");
+		rocket2Obj = ofr.read("objects/rocket_2/rocket_2.obj");
 	}
 	catch (const std::exception& e)
 	{
@@ -114,6 +115,7 @@ int main(int argc, char** argv)
 	vector<float> skyboxVert = getSkyboxCube();
 	vector<float>& sphereVert = sphereObj.subObjects[0].expandedVertices;
 	vector<float>& ufoVert = ufoObj.subObjects[0].expandedVertices;
+	vector<float>& rocket2Vert = rocket2Obj.subObjects[0].expandedVertices;
 	cout << "Objects Loaded\n\n";
 
 
@@ -143,6 +145,7 @@ int main(int argc, char** argv)
 	GLuint neptuneTexture = loadTexture("objects/solar_system/textures/2k_neptune.jpg");
 	GLuint plutoTexture = loadTexture("objects/solar_system/textures/pluto.jpg");
 	GLuint ufoTexture = loadTexture("objects/ufo_1/ufo_kd.jpg");
+	GLuint rocket2Texture = loadTexture("objects/rocket_2/rocket.jpg");
 	vector<string> files = {
 		"skybox/right.jpg",
 		"skybox/left.jpg",
@@ -167,6 +170,7 @@ int main(int argc, char** argv)
 		{ plutoTexture },
 		{ moonTexture },
 		{ ufoTexture },
+		{ rocket2Texture },
 		{ saturnRingTexture },
 		{ uranusRingTexture },
 	};
@@ -179,17 +183,21 @@ int main(int argc, char** argv)
 	glSetupVertexObject(sphereVAO, sphereVBO, sphereVert, vector<int>{3, 2, 3});
 	unsigned int ufoVAO, ufoVBO;
 	glSetupVertexObject(ufoVAO, ufoVBO, ufoVert, vector<int>{3, 2, 3});
+	unsigned int rocket2VAO, rocket2VBO;
+	glSetupVertexObject(rocket2VAO, rocket2VBO, rocket2Vert, vector<int>{3,2,3});
 	unsigned int skyVAO, skyVBO;
 	glSetupVertexObject(skyVAO, skyVBO, skyboxVert, vector<int>{3});
 
 	vector<unsigned int> VAOs{
 		sphereVAO,
 		ufoVAO,
+		rocket2VAO,
 	};
 
 	vector<int> vertexSize{
 		(int)sphereVert.size() / 8,
 		(int)ufoVert.size() / 8,
+		(int)rocket2Vert.size() / 8,
 	};
 
 	// remove binding
@@ -206,50 +214,56 @@ int main(int argc, char** argv)
 
 	// model hyper params				(tweak these to adjust scene)
 
-	float distanceModifier = 15;		// master distance margin scale
-	float earthScale = 15;				// master scale
+	float distanceModifier = 60;		// master distance margin scale
+	float earthScale = 60;				// master scale
 
 	// all these values have to change if customization structure is changed
-	int attributeCount = 8;
+	int attributeCount = 9;
 	vector<float> bodiesCustomization{
 
 		// 1. is animated boolean
 		// 2. scale
-		// 3. margin, the distance between the previous orbiting planet and current planet (this shouldn't include their radius)
+		// 3. margin, the distance between the previous orbiting planet and 
+		//		current planet (this shouldn't include their radius)
 		// 4. oval ratio, major minor axis ratio
 		// 5. orbiting parent index (-1 not orbiting anything) [refer to this array]
 		// 6. body constant index (BodyConst class) [refer to "bodyConstants" variable]
 		// 7. VAO and vertex size index [refer to "vertexSize" variable]
 		// 8. texture index [refer to "textures" variable]
+		// 9. randomize spin angle boolean (this is the switch to enable fixed spin 
+		//		angle initialization relative to orbit angle, as some object have to be 
+		//		parpendicular to other object to make sense)
+		//
+		// rules: orbited object must come before orbiting object as some calculations 
+		//			are depending on their primary object
 
-		// rules: revovled object must come before orbiting object as some calculations are depend on orbited objects
+		//  1   2		3		4		5	6	7   8	9
+			0,	0.3,	0,		1.f,	-1,	0,	0,	0,	1, // 0. sun
+			1,	1,		20,		1.f,	0,	1,	0,	1,	1, // 1. mercury
+			1,	1,		20,		1.f,	0,	2,	0,	2,	1, // 2. venus
+			1,	1,		20,		1.f,	0,	3,	0,	3,	1, // 3. earth
+			1,	1,		20,		1.f,	0,	4,	0,	4,	1, // 4. mars
+			1,	1,		60,		1.f,	0,	5,	0,	5,	1, // 5. jupiter
+			1,	1,		60,		1.f,	0,	6,	0,	6,	1, // 6. saturn
+			1,	1,		100,	1.f,	0,	7,	0,	7,	1, // 7. uranus
+			1,	1,		80,		1.f,	0,	8,	0,	8,	1, // 8. neptune
+			1,	1,		40,		1.f,	0,	9,	0,	9,	1, // 9. pluto
+			1,	1,		10,		1.f,	3,	10,	0,	10, 0, // 10. moon
+			1,	1,		2,		1.f,	10,	11,	1,	11, 1, // 11. ufo 
+			1,	1,		0.3,	1.05f,	10,	12,	1,	11, 1, // 12. ufo 
+			1,	1,		0.5,	1.f,	11,	12,	1,	11, 1, // 13. ufo 
+			1,	0.5,	3,		1.f,	4,	13,	2,	12, 0, // 13. rocket 2
 
-	//  1   2		3		4		5	6	7   8
-		0,	0.3,	0,		1.f,	-1,	0,	0,	0,	// 0. sun
-		1,	1,		20,		1.f,	0,	1,	0,	1,	// 1. mercury
-		1,	1,		20,		1.f,	0,	2,	0,	2,	// 2. venus
-		1,	1,		20,		1.f,	0,	3,	0,	3,	// 3. earth
-		1,	1,		20,		1.f,	0,	4,	0,	4,	// 4. mars
-		1,	1,		60,		1.f,	0,	5,	0,	5,	// 5. jupiter
-		1,	1,		60,		1.f,	0,	6,	0,	6,	// 6. saturn
-		1,	1,		100,	1.f,	0,	7,	0,	7,	// 7. uranus
-		1,	1,		80,		1.f,	0,	8,	0,	8,	// 8. neptune
-		1,	1,		40,		1.f,	0,	9,	0,	9,	// 9. pluto
-		1,	1,		10,		1.f,	3,	10,	0,	10, // 10. moon
-		1,	1,		2,		1.f,	10,	11,	1,	11, // 11. ufo 1
-		1,	1,		0.3,	1.05f,	10,	12,	1,	11, // 12. ufo 2
-		1,	1,		0.5,	1.f,	11,	12,	1,	11, // 13. ufo 3
-		1,	1,		-4,		1.f,	3,	13,	1,	11, // 13. ufo 4
 	};
 	// BUG: when 1. is 1 and 5. is not -1 will cause error
-	// TODO: add clockwise orbit into animator
+	// TODO: 
 	// TODO: add planet rings
 	// TODO: earth use multi textures
 
 	renderedBodies.resize(bodiesCustomization.size() / attributeCount);
 	renderedBodies[sunIdx].position = vec3ToVec(lightPos);
 
-	// get predefined body constants for sun til moon
+	// get predefined body constants for solar system
 	bodyConstants = m.getSolarSystemConstants();
 
 	// add additional custom made body constants for additional objects
@@ -257,17 +271,17 @@ int main(int argc, char** argv)
 	BodyConst customBc;
 
 	// 11
-	customBc.ascendingNode = 0;								// adjust orbit ascending starting point (degree)
-	customBc.axialTilt = 0;									// adjust axial tilt relative to orbit plane (degree)
-	customBc.inclination = 30;									// adjust orbit inclination angle (degree)
+	customBc.ascendingNode = 0;									// adjust orbit ascending starting point (degree)
+	customBc.axialTilt = 180;									// adjust axial tilt relative to orbit plane (degree)
+	customBc.inclination = 180 + 30;							// adjust orbit inclination angle (degree)
 	customBc.localOrbitalPeriod = 30;							// number of spins per orbit
 	customBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 8;	// orbit duration
 	customBc.radius = PConst::MOON_RADIUS / 3;					// object size (will be scaled relative to earth)
 	bodyConstants.push_back(customBc);
 
 	// 12
-	customBc.axialTilt = 40;
-	customBc.inclination = 40;
+	customBc.axialTilt += 10;
+	customBc.inclination += 10;
 	customBc.ascendingNode = 90;
 	customBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 10;
 	bodyConstants.push_back(customBc);
@@ -275,14 +289,18 @@ int main(int argc, char** argv)
 	// 13
 	customBc.ascendingNode = 0;	
 	customBc.axialTilt = 0;		
-	customBc.inclination = 180;	
+	customBc.inclination = 20;	
 	customBc.localOrbitalPeriod = 1;						
-	customBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 8;
-	customBc.radius = PConst::MOON_RADIUS / 3;				
+	customBc.orbitalPeriod = 30;
+	customBc.radius = 75;	
+	customBc.defaultSpinAngle = 90;	 // spin angle relative to orbit angle (make rocket perpendicular to orbit center)
 	bodyConstants.push_back(customBc);
 
 	if (bodiesCustomization.size() / attributeCount != bodyConstants.size()) 
 		cout << "customization params not equal size\n";
+
+
+	// ========== math section ============
 
 	// parse configurations
 	int animIndexCount = 0;
@@ -304,6 +322,7 @@ int main(int argc, char** argv)
 		renderedBodies[i].bodyConstantIdx = bodiesCustomization[i * attributeCount + 5];
 		renderedBodies[i].VAOIdx = bodiesCustomization[i * attributeCount + 6];
 		renderedBodies[i].textureIdx = bodiesCustomization[i * attributeCount + 7];
+		renderedBodies[i].randomSpinAngle = (bool)bodiesCustomization[i * attributeCount + 8];
 	}
 
 	// compute scale relative to earth
@@ -463,7 +482,7 @@ int main(int argc, char** argv)
 		glm::mat4 projection = glm::mat4(1.f);
 		view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
 		projection = glm::perspective(glm::radians(Camera.FOV),
-			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 20000.f);
+			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 200000.f);
 
 		for (int i = 0; i < renderedBodies.size(); i++)
 		{
@@ -709,7 +728,18 @@ void randomizeOrbitAngles()
 	{
 		if (renderedBodies[i].animatorIdx == -1) continue; // not animated
 		int animatorIndex = renderedBodies[i].animatorIdx;
-		animators[animatorIndex].addOrbitAngle(rand() % 360); // randomize initial orbit angle
+		int randAngle1 = rand() % 360;
+		int randAngle2 = rand() % 360;
+		animators[animatorIndex].setOrbitAngle(randAngle1); // randomize initial orbit angle
+		if (renderedBodies[i].randomSpinAngle)
+		{
+			animators[animatorIndex].setSpinAngle(randAngle2);
+		}
+		else
+		{
+			animators[animatorIndex].setSpinAngle(
+				randAngle1 + bodyConstants[renderedBodies[i].bodyConstantIdx].defaultSpinAngle);
+		}
 	}
 }
 
@@ -802,8 +832,8 @@ void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::ve
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.specularStrength"), 0.3f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.shininess"), 16.f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light.constant"), 1.0f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.linear"), 0.000014f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.quadratic"), 0.00000007f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light.linear"), 0.00000014f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light.quadratic"), 0.0000000007f);
 	//glUniform1f(glGetUniformLocation(shaderProgram, "light.phi"), 15.f);
 }
 
