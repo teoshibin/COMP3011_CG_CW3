@@ -5,6 +5,7 @@ in vec3 nor;
 in vec3 fragPos;
 
 uniform sampler2D Texture;
+uniform bool torchLight;
 
 struct Lighting {    
 
@@ -27,9 +28,10 @@ struct Lighting {
     float quadratic;
 
 	// spot light
-	float phi;
+	float phi;		// inner cone
+	float gamma;	// outer cone
 };
-uniform Lighting light;
+uniform Lighting light[2];
 
 out vec4 fragCol;
 
@@ -49,9 +51,13 @@ void main()
 
 	//float phong = directionalIllumination(lighting, nor, fragPos);
 	//float phong = spotIllumination(lighting, nor, fragPos);
-	float phong = positionalIllumination(light, nor, fragPos);
+	float phong = positionalIllumination(light[0], nor, fragPos);
+	if (torchLight) 
+	{
+		phong += spotIllumination(light[1], nor, fragPos);
+	}
 
-	fragCol = phong * texCol * vec4(light.color, 1.f);
+	fragCol = phong * texCol * vec4(light[0].color, 1.f);
 }
 
 float directionalIllumination(Lighting l, vec3 normals, vec3 fragPosition)
@@ -90,25 +96,34 @@ float positionalIllumination(Lighting l, vec3 normals, vec3 fragPosition)
 	return phong * attenuation;
 }
 
-float calculateAttenuation(Lighting l, vec3 fragPosition)
-{
-	float dist = length(l.position - fragPosition);
-	return 1/(l.constant + (l.linear * dist) + (l.quadratic * pow(dist, 2)));
-}
+
 
 float spotIllumination(Lighting l, vec3 normals, vec3 fragPosition)
 {
-	float cosPhi = cos(radians(l.phi));
 	vec3 fromLightDir = -normalize(l.position - fragPosition); // direction of fragment to light position
 	vec3 spotDir = normalize(l.direction); // direction of spot light center vector
 
 	float cosTheta = dot(spotDir, fromLightDir);
-	if(cosTheta > cosPhi)
-	{
-		return positionalIllumination(l, normals, fragPosition);
-	}
-	else
-	{
-		return l.ambientStrength * calculateAttenuation(l, fragPosition);
-	}
+	float cosPhi = cos(radians(l.phi));
+	float cosGamma = cos(radians(l.gamma));
+	float epsilon = cosPhi - cosGamma;
+	//float intensity = clamp((cosTheta - cosGamma) / epsilon, 0.0, 1.0); 
+	float intensity = smoothstep(0.0, 1.0, (cosTheta - cosGamma) / epsilon);
+
+//	if(cosTheta > cosPhi)
+//	{
+//		return positionalIllumination(l, normals, fragPosition);
+//	}
+//	else
+//	{
+//		return l.ambientStrength * calculateAttenuation(l, fragPosition);
+//	}
+
+	return positionalIllumination(l, normals, fragPosition) * intensity;
+}
+
+float calculateAttenuation(Lighting l, vec3 fragPosition)
+{
+	float dist = length(l.position - fragPosition);
+	return 1/(l.constant + (l.linear * dist) + (l.quadratic * pow(dist, 2)));
 }

@@ -39,7 +39,7 @@ unsigned int loadTexture(const char* filename);
 void glSetupVertexObject(unsigned int& VAO, unsigned int& VBO, vector<float>& data, vector<int> attribLayout);
 void glDrawVertexTriangles(unsigned int VAO, GLuint texture, int numberOfVertex);
 void glSetModelViewProjection(unsigned int shaderProgram, glm::mat4 model, glm::mat4 view, glm::mat4 projection);
-void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::vec3 camPos);
+void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, SCamera camPos, int torch);
 
 // helper
 glm::vec3 vecToVec3(vector<float> vec);
@@ -73,6 +73,9 @@ glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 vector<RenderedBody> renderedBodies;
 PlanetMath m;
 vector<BodyConst> bodyConstants;
+
+// interaction
+DelayTrigger torchLight;
 
 // ==================== main =======================
 
@@ -269,8 +272,8 @@ int main(int argc, char** argv)
 			0.f,	0.9,	0.f,	1.f,	6.f,	14.f,	3.f,	13.f,	1.f, // 15. saturn ring
 			0.f,	0.9,	0.f,	1.f,	7.f,	15.f,	4.f,	14.f,	1.f, // 16. uranus ring
 	};
-	// TODO: add planet rings
-	// TODO: multiple lights
+	// TODO: torch light
+	// TODO: multiple cameras
 	// TODO: earth use multi textures
 
 	renderedBodies.resize(bodiesCustomization.size() / attributeCount);
@@ -459,14 +462,13 @@ int main(int argc, char** argv)
 	glm::vec3 Yaxis = glm::vec3(0.f, 1.f, 0.f);
 	glm::vec3 Zaxis = glm::vec3(0.f, 0.f, 1.f);
 
-	bool firstTime = true;
 	while (!glfwWindowShouldClose(window))
 	{
 		// input
 		processKeyboard(window);
 
 		// animate animated objects (some object might just require rendering but not animating)
-		if (!sceneState.getPause() || firstTime)
+		if (sceneState.getCanUpdateAnimation())
 		{
 			float ms_time = (float)sceneState.getMsPlayTime(glfwGetTime()); // get animation time
 
@@ -495,7 +497,7 @@ int main(int argc, char** argv)
 				}
 
 				// animate orbit of current object with a origin of parent's position
-				animators[animatorIdx].animate(ms_time, 2, 4, firstTime);
+				animators[animatorIdx].animate(ms_time, 2, 4, sceneState.getJustStarted());
 
 				// retrieve position
 				renderedBodies[i].position = animators[animatorIdx].getOrbitPosition();
@@ -503,7 +505,7 @@ int main(int argc, char** argv)
 
 			}
 
-			firstTime = false;
+			sceneState.setJustStarted(false);
 		}
 
 		// render
@@ -570,7 +572,7 @@ int main(int argc, char** argv)
 				
 				// scale to correct size
 				model = glm::scale(model, glm::vec3(rb.scale));										
-				glSetLightingConfig(illumShaderProgram, lightPos, Camera.Position);
+				glSetLightingConfig(illumShaderProgram, lightPos, Camera, torchLight.getValue());
 				glSetModelViewProjection(illumShaderProgram, model, view, projection);
 				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
 				//TODO use multiple textures
@@ -614,6 +616,8 @@ void processKeyboard(GLFWwindow* window)
 
 	// scene
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) sceneState.pauseScene(glfwGetTime());
+	if ((glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS))	torchLight.trigger(glfwGetTime());
+
 	if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS)
 	{
 		if (earthOrbitDelay > 1) earthOrbitDelay -= 1;
@@ -847,19 +851,43 @@ void glSetModelViewProjection(unsigned int shaderProgram, glm::mat4 model, glm::
 	glUniformMatrix4fv(glGetUniformLocation(shaderProgram, "projection"), 1, GL_FALSE, glm::value_ptr(projection));
 }
 
-void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, glm::vec3 camPos)
+void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, SCamera cam, int torch)
 {
-	//glUniform3fv(glGetUniformLocation(illumShaderProgram, "light.direction"), 1, &lightDirection[0]);
-	glUniform3fv(glGetUniformLocation(shaderProgram, "light.position"), 1, &lightPos[0]);
-	glUniform3f(glGetUniformLocation(shaderProgram, "light.color"), 1.f, 1.f, 1.f);
-	glUniform3fv(glGetUniformLocation(shaderProgram, "light.camPos"), 1, &camPos[0]);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.ambientStrength"), 0.2f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.specularStrength"), 0.3f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.shininess"), 16.f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.constant"), 1.0f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.linear"), 0.00000014f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light.quadratic"), 0.0000000007f);
-	//glUniform1f(glGetUniformLocation(shaderProgram, "light.phi"), 15.f);
+	////glUniform3fv(glGetUniformLocation(illumShaderProgram, "light.direction"), 1, &lightDirection[0]);
+	//glUniform3fv(glGetUniformLocation(shaderProgram, "light.position"), 1, &lightPos[0]);
+	//glUniform3f(glGetUniformLocation(shaderProgram, "light.color"), 1.f, 1.f, 1.f);
+	//glUniform3fv(glGetUniformLocation(shaderProgram, "light.camPos"), 1, &camPos[0]);
+	//glUniform1f(glGetUniformLocation(shaderProgram, "light.ambientStrength"), 0.2f);
+	//glUniform1f(glGetUniformLocation(shaderProgram, "light.specularStrength"), 0.3f);
+	//glUniform1f(glGetUniformLocation(shaderProgram, "light.shininess"), 16.f);
+	//glUniform1f(glGetUniformLocation(shaderProgram, "light.constant"), 1.0f);
+	//glUniform1f(glGetUniformLocation(shaderProgram, "light.linear"), 0.00000014f);
+	//glUniform1f(glGetUniformLocation(shaderProgram, "light.quadratic"), 0.0000000007f);
+	////glUniform1f(glGetUniformLocation(shaderProgram, "light.phi"), 15.f);
+
+	glUniform3fv(glGetUniformLocation(shaderProgram, "light[0].position"), 1, &lightPos[0]);
+	glUniform3f(glGetUniformLocation(shaderProgram, "light[0].color"), 1.f, 1.f, 1.f);
+	glUniform3fv(glGetUniformLocation(shaderProgram, "light[0].camPos"), 1, &cam.Position[0]);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].ambientStrength"), 0.2f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].specularStrength"), 0.3f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].shininess"), 16.f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].constant"), 1.0f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].linear"), 0.00000014f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].quadratic"), 0.0000000007f);
+
+	glUniform1i(glGetUniformLocation(shaderProgram, "torchLight"), torch);
+	glUniform3fv(glGetUniformLocation(shaderProgram, "light[1].direction"), 1, &cam.Front[0]);
+	glUniform3fv(glGetUniformLocation(shaderProgram, "light[1].position"), 1, &cam.Position[0]);
+	glUniform3f(glGetUniformLocation(shaderProgram, "light[1].color"), 1.f, 1.f, 1.f);
+	glUniform3fv(glGetUniformLocation(shaderProgram, "light[1].camPos"), 1, &cam.Position[0]);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].ambientStrength"), 0.f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].specularStrength"), 0.3f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].shininess"), 16.f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].constant"), 1.0f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].linear"), 0.000005f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].quadratic"), 0.00000015f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].phi"), 25.f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].gamma"), 35.f);
 }
 
 glm::vec3 vecToVec3(vector<float> vec)

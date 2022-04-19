@@ -1,18 +1,10 @@
 #include "SceneState.h"
 
-SceneState::SceneState(float newPauseDelay)
-{
-	pauseDelay = newPauseDelay;
-}
-
 void SceneState::pauseScene(double time, bool force)
 {
-	double pausedTime = time - pauseTriggerTime;
-	if (pausedTime > pauseDelay || force)
+	if (pausing.trigger(time, force))
 	{
-		pauseTriggerTime = time;
-		pause = !pause;
-		if (pause)
+		if (pausing.getValue())
 		{
 			pauseStartTime = time;
 		}
@@ -30,10 +22,25 @@ double SceneState::getMsPlayTime(double time)
 
 bool SceneState::getPause()
 {
-	return pause;
+	return pausing.getValue();
 }
 
 void SceneState::addSPlayTime(double s)
 {
 	totalPausedTime += s;
+}
+
+bool SceneState::getJustStarted()
+{
+	return justStarted;
+}
+
+void SceneState::setJustStarted(bool value)
+{
+	justStarted = value;
+}
+
+bool SceneState::getCanUpdateAnimation()
+{
+	return !pausing.getValue() || justStarted;
 }

@@ -152,6 +152,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="assessment3.cpp" />
+    <ClCompile Include="DelayTrigger.cpp" />
     <ClCompile Include="OrbitAnimator.cpp" />
     <ClCompile Include="libraries\include\glad\glad.c" />
     <ClCompile Include="modelReader.cpp" />
@@ -163,6 +164,7 @@
   <ItemGroup>
     <ClInclude Include="bitmap.h" />
     <ClInclude Include="camera.h" />
+    <ClInclude Include="DelayTrigger.h" />
     <ClInclude Include="FlyThroughCamera.h" />
     <ClInclude Include="OrbitAnimator.h" />
     <ClInclude Include="ModelViewerCamera.h" />
