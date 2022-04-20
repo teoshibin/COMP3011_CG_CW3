@@ -121,6 +121,8 @@ struct RenderedBody
 	
 	// body orbiting position
 	std::vector<float> position{0.f,0.f,0.f};
+	// final position for model view position calculation
+	std::vector<float> finalPosition{ 0.f,0.f,0.f };
 
 	// body spin rotation
 	float rotation = 0;
