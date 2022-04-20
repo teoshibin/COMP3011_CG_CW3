@@ -166,10 +166,8 @@
     <ClInclude Include="bitmap.h" />
     <ClInclude Include="camera.h" />
     <ClInclude Include="DelayTrigger.h" />
-    <ClInclude Include="FlyThroughCamera.h" />
     <ClInclude Include="GeneralCamera.h" />
     <ClInclude Include="OrbitAnimator.h" />
-    <ClInclude Include="ModelViewerCamera.h" />
     <ClInclude Include="modelReader.h" />
     <ClInclude Include="PlanetMath.h" />
     <ClInclude Include="SceneState.h" />

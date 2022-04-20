@@ -634,7 +634,6 @@ int main(int argc, char** argv)
 
 void processKeyboard(GLFWwindow* window)
 {
-	cout << camera.getYaw() << " " << camera.getPitch() << endl;
 
 	// window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
