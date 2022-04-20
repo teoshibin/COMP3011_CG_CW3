@@ -1,7 +1,6 @@
 #pragma once
 
 #include <glm/glm/glm.hpp>
-//#include "glm/glm/gtx/string_cast.hpp"
 #include "camera.h"
 
 glm::vec3 CalHorizontalFront(SCamera& in)

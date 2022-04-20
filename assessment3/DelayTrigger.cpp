@@ -1,6 +1,6 @@
 #include "DelayTrigger.h"
 
-bool DelayTrigger::trigger(float time ,bool force)
+bool DelayTrigger::toggle(float time, bool force)
 {
 	if (((time - previousTriggerTime) > delay) || force)
 	{

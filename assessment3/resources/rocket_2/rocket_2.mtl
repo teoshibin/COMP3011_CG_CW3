@@ -10,7 +10,7 @@ Ke 0.000000 0.000000 0.000000
 Ni 1.500000
 d 1.000000
 illum 2
-map_Kd rocket.jpg
+map_Kd C:\\Users\\user\\source\\repos\\assessment3\\assessment3\\rocket_v1_L1.123cd2c0a4e1-4c91-4403-b771-7c1ece7ac0c4\\rocket.jpg
 
 newmtl rocket_detail_1
 Ns 29.999999

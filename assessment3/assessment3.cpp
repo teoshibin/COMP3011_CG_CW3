@@ -63,19 +63,22 @@ float prevMouseX;
 float prevMouseY;
 
 // scene 
-SceneState sceneState;
-vector<OrbitAnimator> animators;
-
-int earthIdx = 3;
 int sunIdx = 0;
+int earthIdx = 3;
 float earthOrbitDelay = 600;
 glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
-vector<RenderedBody> renderedBodies;
 PlanetMath m;
+vector<RenderedBody> renderedBodies;
 vector<BodyConst> bodyConstants;
+vector<OrbitAnimator> animators;
 
 // interaction
-DelayTrigger torchLight;
+SceneState sceneState;
+DelayTrigger torchLightTrigger;
+DelayTrigger randomizeAngleTrigger;
+DelayTrigger flyThroughTrigger;
+DelayTrigger previousModelTrigger;
+DelayTrigger nextModelTrigger;
 
 // ==================== main =======================
 
@@ -132,6 +135,11 @@ int main(int argc, char** argv)
 	unsigned int basicShaderProgram = LoadShader("shaders/basic.vert", "shaders/basic.frag");
 	unsigned int skyShaderProgram = LoadShader("shaders/sky.vert", "shaders/sky.frag");
 	cout << "Shaders Loaded\n\n";
+
+	vector<unsigned int> shaders{
+		basicShaderProgram,
+		illumShaderProgram,
+	};
 
 	// ======= load all textures =======
 	cout << "Loading Textures...\n";
@@ -233,46 +241,49 @@ int main(int argc, char** argv)
 	float earthScale = 60;				// master scale
 
 	// all these values have to change if customization structure is changed
-	int attributeCount = 9;
+	int attributeCount = 10;
 	vector<float> bodiesCustomization{
 
+		// esthetic
 		// a. is animated boolean 
 		// s. scale
 		// m. margin, the distance between the previous orbiting planet and 
 		//		current planet
 		// ov. oval ratio, major minor axis ratio
-		// pr. parent index (-1: not orbiting, *: orbiting when a==1, following when a==0) 
-		//		[refer to this array]
-		// bc. body constant index (BodyConst class) [refer to "bodyConstants" variable]
-		// vao. VAO and vertex size index [refer to "vertexSize" variable]
-		// tx. texture index [refer to "textures" variable]
 		// rd. randomize spin angle boolean (this is the switch to enable fixed spin 
 		//		angle initialization relative to orbit angle, as some object have to be 
 		//		parpendicular to other object to make sense)
+		// 
+		// resource linking
+		// pr. parent index (-1: not orbiting, * > -1: orbiting pr when a == 1, 
+		//		following pr when a == 0) [refer to this array]
+		// bc. body constant index [refer to "bodyConstants" array]
+		// vao. VAO and vertex size index [refer to "vertexSize" & "VAOs" array]
+		// tx. texture index [refer to "textures" array]
+		// sd. shader index [refer to "shaders" array] (THIS IS NOT USED ATM)
 		//
 		// rules: orbited object must come before orbiting object as some calculations 
 		//			are depending on their primary object
-
-		//  a		s		m		ov		pr		bc		vao		tx		rd
-			0.f,	0.3f,	0.f,	1.f,	-1.f,	0.f,	0.f,	0.f,	1.f, // 0. sun
-			1.f,	1.f,	20.f,	1.f,	0.f,	1.f,	0.f,	1.f,	1.f, // 1. mercury
-			1.f,	1.f,	20.f,	1.f,	0.f,	2.f,	0.f,	2.f,	1.f, // 2. venus
-			1.f,	1.f,	20.f,	1.f,	0.f,	3.f,	0.f,	3.f,	1.f, // 3. earth
-			1.f,	1.f,	20.f,	1.f,	0.f,	4.f,	0.f,	4.f,	1.f, // 4. mars
-			1.f,	1.f,	60.f,	1.f,	0.f,	5.f,	0.f,	5.f,	1.f, // 5. jupiter
-			1.f,	1.f,	60.f,	1.f,	0.f,	6.f,	0.f,	6.f,	1.f, // 6. saturn
-			1.f,	1.f,	100.f,	1.f,	0.f,	7.f,	0.f,	7.f,	1.f, // 7. uranus
-			1.f,	1.f,	80.f,	1.f,	0.f,	8.f,	0.f,	8.f,	1.f, // 8. neptune
-			1.f,	1.f,	40.f,	1.f,	0.f,	9.f,	0.f,	9.f,	1.f, // 9. pluto
-			1.f,	1.f,	10.f,	1.f,	3.f,	10.f,	0.f,	10.f,	0.f, // 10. moon
-			1.f,	1.f,	2.f,	1.f,	10.f,	11.f,	1.f,	11.f,	1.f, // 11. ufo 
-			1.f,	1.f,	0.3f,	1.05f,	10.f,	12.f,	1.f,	11.f,	1.f, // 12. ufo 
-			1.f,	1.f,	0.5f,	1.f,	11.f,	12.f,	1.f,	11.f,	1.f, // 13. ufo 
-			1.f,	0.5,	3.f,	1.f,	4.f,	13.f,	2.f,	12.f,	0.f, // 14. rocket 2
-			0.f,	0.9,	0.f,	1.f,	6.f,	14.f,	3.f,	13.f,	1.f, // 15. saturn ring
-			0.f,	0.9,	0.f,	1.f,	7.f,	15.f,	4.f,	14.f,	1.f, // 16. uranus ring
+		//
+		//  a		s		m		ov		rd		pr		bc		vao		tx		sd
+			0.f,	0.3f,	0.f,	1.f,	1.f,	-1.f,	0.f,	0.f,	0.f,	0.f, // 0. sun
+			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	1.f,	0.f,	1.f,	1.f, // 1. mercury
+			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	2.f,	0.f,	2.f,	1.f, // 2. venus
+			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	3.f,	0.f,	3.f,	1.f, // 3. earth
+			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	4.f,	0.f,	4.f,	1.f, // 4. mars
+			1.f,	1.f,	60.f,	1.f,	1.f,	0.f,	5.f,	0.f,	5.f,	1.f, // 5. jupiter
+			1.f,	1.f,	60.f,	1.f,	1.f,	0.f,	6.f,	0.f,	6.f,	1.f, // 6. saturn
+			1.f,	1.f,	100.f,	1.f,	1.f,	0.f,	7.f,	0.f,	7.f,	1.f, // 7. uranus
+			1.f,	1.f,	80.f,	1.f,	1.f,	0.f,	8.f,	0.f,	8.f,	1.f, // 8. neptune
+			1.f,	1.f,	40.f,	1.f,	1.f,	0.f,	9.f,	0.f,	9.f,	1.f, // 9. pluto
+			1.f,	1.f,	10.f,	1.f,	0.f,	3.f,	10.f,	0.f,	10.f,	1.f, // 10. moon
+			1.f,	1.f,	2.f,	1.f,	1.f,	10.f,	11.f,	1.f,	11.f,	1.f, // 11. ufo 
+			1.f,	1.f,	0.3f,	1.05f,	1.f,	10.f,	12.f,	1.f,	11.f,	1.f, // 12. ufo 
+			1.f,	1.f,	0.5f,	1.f,	1.f,	11.f,	12.f,	1.f,	11.f,	1.f, // 13. ufo 
+			1.f,	0.5,	3.f,	1.f,	0.f,	4.f,	13.f,	2.f,	12.f,	1.f, // 14. rocket 2
+			0.f,	0.9,	0.f,	1.f,	1.f,	6.f,	14.f,	3.f,	13.f,	1.f, // 15. saturn ring
+			0.f,	0.9,	0.f,	1.f,	1.f,	7.f,	15.f,	4.f,	14.f,	1.f, // 16. uranus ring
 	};
-	// TODO: torch light
 	// TODO: multiple cameras
 	// TODO: earth use multi textures
 
@@ -346,11 +357,12 @@ int main(int argc, char** argv)
 		renderedBodies[i].scaleModifier = bodiesCustomization[i * attributeCount + 1];
 		renderedBodies[i].distanceMargin = bodiesCustomization[i * attributeCount + 2];
 		renderedBodies[i].ovalRatio = bodiesCustomization[i * attributeCount + 3];
-		renderedBodies[i].orbitParentIdx = bodiesCustomization[i * attributeCount + 4];
-		renderedBodies[i].bodyConstantIdx = bodiesCustomization[i * attributeCount + 5];
-		renderedBodies[i].VAOIdx = bodiesCustomization[i * attributeCount + 6];
-		renderedBodies[i].textureIdx = bodiesCustomization[i * attributeCount + 7];
-		renderedBodies[i].randomSpinAngle = (bool)bodiesCustomization[i * attributeCount + 8];
+		renderedBodies[i].randomSpinAngle = (bool)bodiesCustomization[i * attributeCount + 4];
+		renderedBodies[i].orbitParentIdx = bodiesCustomization[i * attributeCount + 5];
+		renderedBodies[i].bodyConstantIdx = bodiesCustomization[i * attributeCount + 6];
+		renderedBodies[i].VAOIdx = bodiesCustomization[i * attributeCount + 7];
+		renderedBodies[i].textureIdx = bodiesCustomization[i * attributeCount + 8];
+		renderedBodies[i].shaderIdx = bodiesCustomization[i * attributeCount + 9];
 	}
 
 	// compute scale relative to earth
@@ -572,7 +584,7 @@ int main(int argc, char** argv)
 				
 				// scale to correct size
 				model = glm::scale(model, glm::vec3(rb.scale));										
-				glSetLightingConfig(illumShaderProgram, lightPos, Camera, torchLight.getValue());
+				glSetLightingConfig(illumShaderProgram, lightPos, Camera, torchLightTrigger.getValue());
 				glSetModelViewProjection(illumShaderProgram, model, view, projection);
 				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
 				//TODO use multiple textures
@@ -603,6 +615,7 @@ void processKeyboard(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)		glfwSetWindowShouldClose(window, true);
 
 	// camera
+	
 	if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)			MoveCamera(Camera, SCamera::FORWARD);
 	if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)			MoveCamera(Camera, SCamera::BACKWARD);
 	if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)			MoveCamera(Camera, SCamera::LEFT);
@@ -613,24 +626,47 @@ void processKeyboard(GLFWwindow* window)
 
 	if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS) Camera.FOV -= 0.05f;
 	if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS) Camera.FOV += 0.05f;
+	
 
-	// scene
+	// ===== scene ====
+	
+	// pausing
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) sceneState.pauseScene(glfwGetTime());
-	if ((glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS))	torchLight.trigger(glfwGetTime());
-
+	// toggle player torch light
+	if ((glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS))	torchLightTrigger.toggle(glfwGetTime());
+	// speed up
 	if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS)
 	{
-		if (earthOrbitDelay > 1) earthOrbitDelay -= 1;
-		updateAnimatorsDelays();
-		cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
+		float stepSize = powf(10, log10f(earthOrbitDelay) - 1) * 0.05;
+		float newValue = earthOrbitDelay - stepSize;
+		if (newValue > 0.01)
+		{
+			earthOrbitDelay = newValue;
+			updateAnimatorsDelays();
+			cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
+		}
 	}
+	// slow down
 	if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS)
 	{
-		if (earthOrbitDelay < 3601) earthOrbitDelay += 1;
-		updateAnimatorsDelays();
-		cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
+		float stepSize = powf(10, log10f(earthOrbitDelay) - 1) * 0.05;
+		float newValue = earthOrbitDelay + stepSize;
+		if (newValue < 3601)
+		{
+			earthOrbitDelay = newValue;
+			updateAnimatorsDelays();
+			cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
+		}
 	}
-	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS) randomizeOrbitAngles();
+	// randomize orbit angle
+	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
+	{
+		// if toggled then trigger (the internal state doesn't matter)
+		if (randomizeAngleTrigger.toggle(glfwGetTime()))
+		{
+			randomizeOrbitAngles();
+		}
+	}
 }
 
 void processMouse(GLFWwindow* window, double x, double y)
@@ -853,18 +889,6 @@ void glSetModelViewProjection(unsigned int shaderProgram, glm::mat4 model, glm::
 
 void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, SCamera cam, int torch)
 {
-	////glUniform3fv(glGetUniformLocation(illumShaderProgram, "light.direction"), 1, &lightDirection[0]);
-	//glUniform3fv(glGetUniformLocation(shaderProgram, "light.position"), 1, &lightPos[0]);
-	//glUniform3f(glGetUniformLocation(shaderProgram, "light.color"), 1.f, 1.f, 1.f);
-	//glUniform3fv(glGetUniformLocation(shaderProgram, "light.camPos"), 1, &camPos[0]);
-	//glUniform1f(glGetUniformLocation(shaderProgram, "light.ambientStrength"), 0.2f);
-	//glUniform1f(glGetUniformLocation(shaderProgram, "light.specularStrength"), 0.3f);
-	//glUniform1f(glGetUniformLocation(shaderProgram, "light.shininess"), 16.f);
-	//glUniform1f(glGetUniformLocation(shaderProgram, "light.constant"), 1.0f);
-	//glUniform1f(glGetUniformLocation(shaderProgram, "light.linear"), 0.00000014f);
-	//glUniform1f(glGetUniformLocation(shaderProgram, "light.quadratic"), 0.0000000007f);
-	////glUniform1f(glGetUniformLocation(shaderProgram, "light.phi"), 15.f);
-
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light[0].position"), 1, &lightPos[0]);
 	glUniform3f(glGetUniformLocation(shaderProgram, "light[0].color"), 1.f, 1.f, 1.f);
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light[0].camPos"), 1, &cam.Position[0]);

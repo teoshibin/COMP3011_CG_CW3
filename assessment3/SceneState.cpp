@@ -2,7 +2,7 @@
 
 void SceneState::pauseScene(double time, bool force)
 {
-	if (pausing.trigger(time, force))
+	if (pausing.toggle(time, force))
 	{
 		if (pausing.getValue())
 		{

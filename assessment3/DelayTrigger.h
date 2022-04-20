@@ -2,7 +2,7 @@
 class DelayTrigger
 {
 public:
-	bool trigger(float time, bool force = false);
+	bool toggle(float time, bool force = false);
 	void setValue(bool value);
 	bool getValue();
 	void setDelay(float delay);

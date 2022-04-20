@@ -146,6 +146,7 @@ struct RenderedBody
 	int orbitParentIdx = -1;
 	int VAOIdx = -1;
 	int textureIdx = -1;
+	int shaderIdx = -1;
 };
 
 class PlanetMath
