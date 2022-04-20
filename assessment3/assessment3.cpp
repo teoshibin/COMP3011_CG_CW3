@@ -9,8 +9,6 @@
 #include <map>
 #include <stdlib.h>
 #include "stb_image.h"
-//#include "camera.h"
-//#include "FlyThroughCamera.h"
 #include "shader.h"
 #include "window.h"
 #include "modelReader.h"
@@ -21,7 +19,7 @@
 #include "GeneralCamera.h"
 
 // debug
-#include <glm/glm/gtx/string_cast.hpp>
+//#include <glm/glm/gtx/string_cast.hpp>
 
 using namespace std;
 
@@ -61,7 +59,6 @@ int WINDOW_WIDTH = 1280;
 int WINDOW_HEIGHT = 800;
 
 // camera and camera control
-//SCamera Camera;
 GeneralCamera camera;
 bool firstMouse = true;
 float prevMouseX;
@@ -102,34 +99,15 @@ int main(int argc, char** argv)
 	glfwSetCursorPosCallback(window, processMouse);		// set mouse event callback
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress); // init glad
 
-	// ====================== OPENGL ======================		
-	//InitCamera(Camera);				// init camera
-	displayLoadingScreen(window);	// loading screen (contains gl code)
 
+	// ====================== OPENGL ======================		
+
+	displayLoadingScreen(window);	// loading screen (contains gl code)
 	int startLoadingTime = (int)glfwGetTime(); // to calculate loading time
 
-	//float aaa[16] = {
-	//   1, 2, 3, 4,
-	//   5, 6, 7, 8,
-	//   9, 10, 11, 12,
-	//   13, 14, 15, 16
-	//};
-	//glm::mat4 bbb;
 
-	//memcpy(glm::value_ptr(bbb), aaa, sizeof(aaa));
-	//cout << glm::to_string(bbb) << endl;
-	//cout << bbb[0][3] << endl;
-	//cout << bbb[1][3] << endl;
-	//cout << bbb[2][3] << endl;
-	//cout << bbb[3][3] << endl;
-	//glm::mat4 test = glm::translate(glm::mat4(1.f), glm::vec3(1.f,2.f,3.f));
-	//test = glm::rotate(test, glm::radians(45.f), glm::vec3(1, 1, 1));
-
-	//cout << glm::to_string(test) << endl;
-	//cout << glm::to_string(test * glm::vec4(0, 0, 0, 1));
-
-	//return 0;
 	// ========= load objects =========
+
 	ObjFileReader ofr;
 	ObjectFileData sphereObj, ufoObj, rocket2Obj, saturnRingObj, uranusRingObj;
 	cout << "Loading Objects...\n";
@@ -157,6 +135,7 @@ int main(int argc, char** argv)
 
 
 	// ======== load shaders =========
+
 	cout << "Loading Shaders...\n";
 	unsigned int illumShaderProgram = LoadShader("shaders/illuminated.vert", "shaders/illuminated.frag");
 	unsigned int basicShaderProgram = LoadShader("shaders/basic.vert", "shaders/basic.frag");
@@ -168,7 +147,9 @@ int main(int argc, char** argv)
 		illumShaderProgram,
 	};
 
+
 	// ======= load all textures =======
+
 	cout << "Loading Textures...\n";
 	GLuint sunTexture = loadTexture("resources/solar_system/textures/2k_sun.jpg");
 	GLuint mercuryTexture = loadTexture("resources/solar_system/textures/2k_mercury.jpg");
@@ -217,9 +198,11 @@ int main(int argc, char** argv)
 		{ uranusRingTexture },
 	};
 
-	// ======= prepre scene rendering =======
-	cout << "Setting Up Scene...\n";
 
+	// ======= prepre scene rendering =======
+
+
+	cout << "Setting Up Scene...\n";
 	// gen buffers
 	unsigned int sphereVAO, sphereVBO;
 	glSetupVertexObject(sphereVAO, sphereVBO, sphereVert, vector<int>{3, 2, 3});
@@ -257,7 +240,9 @@ int main(int argc, char** argv)
 	// configure global opengl state
 	glEnable(GL_DEPTH_TEST);
 
+
 	// =========== MODEL & ANIMATION CONFIG ==============
+
 
 	// model constants
 	float SPHERE_OBJECT_RADIUS = 2;		// 3d vertex sphere radius (do not change)
@@ -311,7 +296,7 @@ int main(int argc, char** argv)
 			0.f,	0.9,	0.f,	1.f,	1.f,	6.f,	14.f,	3.f,	13.f,	1.f, // 15. saturn ring
 			0.f,	0.9,	0.f,	1.f,	1.f,	7.f,	15.f,	4.f,	14.f,	1.f, // 16. uranus ring
 	};
-	// TODO: multiple cameras
+	// TODO: add as much model as possible
 	// TODO: earth use multi textures
 
 	renderedBodies.resize(bodiesCustomization.size() / attributeCount);
@@ -556,7 +541,6 @@ int main(int argc, char** argv)
 		glm::mat4 model = glm::mat4(1.f);
 		glm::mat4 view = glm::mat4(1.f);
 		glm::mat4 projection = glm::mat4(1.f);
-		//view = glm::lookAt(Camera.Position, Camera.Position + Camera.Front, Camera.Up);
 		view = glm::lookAt(camera.getPosition(), camera.getPosition() + camera.getFront(), camera.getUp());
 		projection = glm::perspective(glm::radians(camera.getFOV()),
 			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 200000.f);
@@ -626,7 +610,7 @@ int main(int argc, char** argv)
 				glSetLightingConfig(illumShaderProgram, lightPos, camera, torchLightTrigger.getValue());
 				glSetModelViewProjection(illumShaderProgram, model, view, projection);
 				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
-				//TODO use multiple textures
+				//TODO: use multiple textures
 			}
 		}
 
@@ -650,6 +634,8 @@ int main(int argc, char** argv)
 
 void processKeyboard(GLFWwindow* window)
 {
+	cout << camera.getYaw() << " " << camera.getPitch() << endl;
+
 	// window
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
 
@@ -658,6 +644,7 @@ void processKeyboard(GLFWwindow* window)
 	{
 		modelSelection -= 1;
 		if (modelSelection == -1) modelSelection = renderedBodies.size() - 1;
+		if (!cameraMode) camera.setYaw(camera.getYaw() - 180.f); // fix camera flip 180
 		cameraMode = true;
 
 	}
@@ -665,11 +652,22 @@ void processKeyboard(GLFWwindow* window)
 	{
 		modelSelection += 1;
 		if (modelSelection > renderedBodies.size() - 1) modelSelection = 0;
+		if (!cameraMode) camera.setYaw(camera.getYaw() - 180.f); // fix camera flip 180
 		cameraMode = true;
 	}
 	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && flyThroughTrigger.toggle(glfwGetTime()))
 	{
-		cameraMode = false;
+		if (cameraMode)
+		{
+			cameraMode = false;
+			camera.setYaw(camera.getYaw() + 180.f); // fix camera flip 180 when switching back
+			camera.orientCamera(0, 0);
+		}
+		else
+		{
+			cameraMode = true;
+			camera.setYaw(camera.getYaw() - 180.f); // fix camera flip 180
+		}
 	}
 
 	// fly through camera
@@ -699,12 +697,12 @@ void processKeyboard(GLFWwindow* window)
 		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
 		{
 			x = 0.f;
-			y = 1.f;
+			y = -1.f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
 		{
 			x = 0.f;
-			y = -1.f;
+			y = 1.f;
 		}
 		if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
 		{
@@ -724,8 +722,7 @@ void processKeyboard(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS) camera.decreaseFOV(0.05f);
 	if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS) camera.increaseFOV(0.05f);
 	
-	// ===== scene ====
-	
+		
 	// pausing
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) sceneState.pauseScene(glfwGetTime());
 	// toggle player torch light

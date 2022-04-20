@@ -25,15 +25,15 @@ void GeneralCamera::orientCamera(float xoffset, float yoffset)
 	yaw += xoffset * mouseSensitivity;
 	pitch -= yoffset * mouseSensitivity;
 
-	if (pitch > 89.0f) pitch = 89.0f;
-	if (pitch < -89.0f) pitch = -89.0f;
+	if (pitch > 89.f) pitch = 89.f;
+	if (pitch < -89.f) pitch = -89.f;
 
 	glm::vec3 newFront;
 	newFront.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch));
 	newFront.y = sin(glm::radians(pitch));
 	newFront.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
+	
 	front = glm::normalize(newFront);
-
 	right = glm::normalize(glm::cross(front, worldUp));
 	up = glm::normalize(glm::cross(right, front));
 }
@@ -47,12 +47,13 @@ void GeneralCamera::moveAndOrientCamera(glm::vec3 target, float xoffset, float y
 	yaw -= xoffset * modelViewSpeed;
 	pitch -= yoffset * modelViewSpeed;
 
-	if (pitch > 89.0f) pitch = 89.0f;
-	if (pitch < -89.0f) pitch = -89.0f;
+	if (pitch > 89.f) pitch = 89.f;
+	if (pitch < -89.f) pitch = -89.f;
 
 	position.x = cos(glm::radians(yaw)) * cos(glm::radians(pitch)) * modelViewDistance + target.x;
 	position.y = sin(glm::radians(pitch)) * modelViewDistance + target.y;
 	position.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch)) * modelViewDistance + target.z;
+	
 	front = glm::normalize(target - position);
 	right = glm::normalize(glm::cross(front, worldUp));
 	up = glm::normalize(glm::cross(right, front));
@@ -103,6 +104,21 @@ void GeneralCamera::setModelViewDistance(float value)
 float GeneralCamera::getModelViewDistance()
 {
 	return modelViewDistance;
+}
+
+float GeneralCamera::getYaw()
+{
+	return yaw;
+}
+
+float GeneralCamera::getPitch()
+{
+	return pitch;
+}
+
+void GeneralCamera::setYaw(float value)
+{
+	yaw = value;
 }
 
 glm::vec3 GeneralCamera::getFront()

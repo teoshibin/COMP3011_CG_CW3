@@ -37,6 +37,9 @@ public:
 	void decreaseModelViewDistance(float value);
 	void setModelViewDistance(float value);
 	float getModelViewDistance();
+	float getYaw();
+	float getPitch();
+	void setYaw(float value);
 private:
 
 	glm::vec3 position;
