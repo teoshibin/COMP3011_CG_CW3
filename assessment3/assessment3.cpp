@@ -150,6 +150,7 @@ int main(int argc, char** argv)
 
 	cout << "Loading Shaders...\n";
 	unsigned int illumShaderProgram = LoadShader("shaders/illuminated.vert", "shaders/illuminated.frag");
+	unsigned int earthShaderProgram = LoadShader("shaders/earth.vert", "shaders/earth.frag");
 	unsigned int basicShaderProgram = LoadShader("shaders/basic.vert", "shaders/basic.frag");
 	unsigned int skyShaderProgram = LoadShader("shaders/sky.vert", "shaders/sky.frag");
 	cout << "Shaders Loaded\n\n";
@@ -157,6 +158,7 @@ int main(int argc, char** argv)
 	vector<unsigned int> shaders{
 		basicShaderProgram,
 		illumShaderProgram,
+		earthShaderProgram,
 	};
 
 
@@ -201,7 +203,7 @@ int main(int argc, char** argv)
 		{ sunTexture },
 		{ mercuryTexture },
 		{ venusTexture, venusAtmosphereTexture },
-		{ earthTexture, earthNightTexture, earthCloudsTexture },
+		{ earthTexture, earthCloudsTexture, earthNightTexture},
 		{ marsTexture },
 		{ jupiterTexture },
 		{ saturnTexture },
@@ -574,6 +576,11 @@ int main(int argc, char** argv)
 	glUseProgram(skyShaderProgram);
 	glUniform1i(glGetUniformLocation(skyShaderProgram, "skybox"), 0); // set texture to 0
 
+	glUseProgram(earthShaderProgram);
+	glUniform1i(glGetUniformLocation(earthShaderProgram, "Texture1"), 0);
+	glUniform1i(glGetUniformLocation(earthShaderProgram, "Texture2"), 1);
+	glUniform1i(glGetUniformLocation(earthShaderProgram, "Texture3"), 2);
+
 	sceneState.addSPlayTime(glfwGetTime());		// add asset loading time to paused time (rectify animation time)
 	//sceneState.pauseScene(glfwGetTime(), true);
 
@@ -667,8 +674,11 @@ int main(int argc, char** argv)
 			else
 			{
 				RenderedBody& pr = renderedBodies[rb.orbitParentIdx];
+				
+				// use special shader for earth
+				if (i == earthIdx) glUseProgram(earthShaderProgram);
+				else glUseProgram(illumShaderProgram);
 
-				glUseProgram(illumShaderProgram);
 				model = glm::mat4(1.f);
 
 				// rotate using parents' ascending node to rectify orbit shift due to parent's shift of their own ascending node angle
@@ -702,10 +712,27 @@ int main(int argc, char** argv)
 					)
 				);
 
-				glSetLightingConfig(illumShaderProgram, lightPos, camera, torchLightTrigger.getValue());
-				glSetModelViewProjection(illumShaderProgram, model, view, projection);
-				glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
-				//TODO: use multiple textures
+				// for earth use special shader
+				if (i == earthIdx)
+				{
+					glSetLightingConfig(earthShaderProgram, lightPos, camera, torchLightTrigger.getValue());
+					glUniform1f(glGetUniformLocation(earthShaderProgram, "light[0].ambientStrength"), 0.1f);
+					glSetModelViewProjection(earthShaderProgram, model, view, projection);
+					glBindVertexArray(VAOs[rb.VAOIdx]);
+					glActiveTexture(GL_TEXTURE0);
+					glBindTexture(GL_TEXTURE_2D, textures[txIdx][0]);
+					glActiveTexture(GL_TEXTURE1);
+					glBindTexture(GL_TEXTURE_2D, textures[txIdx][1]);
+					glActiveTexture(GL_TEXTURE2);
+					glBindTexture(GL_TEXTURE_2D, textures[txIdx][2]);
+					glDrawArrays(GL_TRIANGLES, 0, vertexSize[rb.VAOIdx]);
+				}
+				else
+				{
+					glSetLightingConfig(illumShaderProgram, lightPos, camera, torchLightTrigger.getValue());
+					glSetModelViewProjection(illumShaderProgram, model, view, projection);
+					glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
+				}
 			}
 		}
 
@@ -850,7 +877,7 @@ void processKeyboard(GLFWwindow* window)
 	{
 		float stepSize = powf(10, log10f(earthOrbitDelay) - 1) * 0.05;
 		float newValue = earthOrbitDelay + stepSize;
-		if (newValue < 3601)
+		if (newValue < 86401)
 		{
 			earthOrbitDelay = newValue;
 			updateAnimatorsDelays();

@@ -124,5 +124,11 @@
     <None Include="shaders\sky.vert">
       <Filter>Resource Files\shaders</Filter>
     </None>
+    <None Include="shaders\earth.frag">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
+    <None Include="shaders\earth.vert">
+      <Filter>Resource Files\shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>

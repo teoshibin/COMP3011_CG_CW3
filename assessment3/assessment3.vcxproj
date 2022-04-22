@@ -181,6 +181,8 @@
   <ItemGroup>
     <None Include="shaders\basic.frag" />
     <None Include="shaders\basic.vert" />
+    <None Include="shaders\earth.frag" />
+    <None Include="shaders\earth.vert" />
     <None Include="shaders\illuminated.frag" />
     <None Include="shaders\illuminated.vert" />
     <None Include="shaders\load.frag" />
