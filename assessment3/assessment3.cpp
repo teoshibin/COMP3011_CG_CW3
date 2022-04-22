@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // disable mouse
 	glfwSetCursorPosCallback(window, processMouse);		// set mouse event callback
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress); // init glad
-
+	
 
 	// ====================== OPENGL ======================		
 
@@ -223,7 +223,6 @@ int main(int argc, char** argv)
 
 	// ======= prepre scene rendering =======
 
-
 	cout << "Setting Up Scene...\n";
 	// gen buffers
 	unsigned int sphereVAO, sphereVBO;
@@ -314,35 +313,36 @@ int main(int argc, char** argv)
 		// bc. body constant index [refer to "bodyConstants" array]
 		// vao. VAO and vertex size index [refer to "vertexSize" & "VAOs" array]
 		// tx. texture index [refer to "textures" array]
-		// sd. shader index [refer to "shaders" array] (THIS IS NOT USED ATM)
+		// mv. model view boolean to disable model view option of certain objects
 		//
 		// rules: orbited object must come before orbiting object as some calculations 
 		//			are depending on their primary object
 		// earthIdx MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
 		// sunIdx MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
 		// 
-		//  a		s		m		ov		rd		pr*		bc		vao		tx		sd
-			0.f,	0.3f,	0.f,	1.f,	1.f,	-1.f,	0.f,	0.f,	0.f,	0.f, // 0. sun
+		//  a		s		m		ov		rd		pr*		bc		vao		tx		mv
+			0.f,	0.3f,	0.f,	1.f,	1.f,	-1.f,	0.f,	0.f,	0.f,	1.f, // 0. sun
 			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	1.f,	0.f,	1.f,	1.f, // 1. mercury
 			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	2.f,	0.f,	2.f,	1.f, // 2. venus
-			1.f,	2.f,	5.f,	1.2f,	0.f,	2.f,	19.f,	7.f,	17.f,	1.f, // 20. electron rocket
-			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	3.f,	0.f,	3.f,	1.f, // 3. earth
-			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	4.f,	0.f,	4.f,	1.f, // 4. mars
-			1.f,	1.f,	5.f,	1.f,	1.f,	0.f,	16.f,	5.f,	15.f,	1.f, // 5. astroid 1
-			1.f,	1.f,	55.f,	1.f,	1.f,	0.f,	5.f,	0.f,	5.f,	1.f, // 6. jupiter
-			1.f,	1.f,	60.f,	1.f,	1.f,	0.f,	6.f,	0.f,	6.f,	1.f, // 7. saturn
-			1.f,	1.f,	20.f,	1.5f,	0.f,	8.f,	18.f,	9.f,	19.f,	1.f, // 8. super heavy rocket
-			1.f,	1.f,	100.f,	1.f,	1.f,	0.f,	7.f,	0.f,	7.f,	1.f, // 9. uranus
-			1.f,	1.f,	80.f,	1.f,	1.f,	0.f,	8.f,	0.f,	8.f,	1.f, // 10. neptune
-			1.f,	1.f,	40.f,	1.f,	1.f,	0.f,	9.f,	0.f,	9.f,	1.f, // 11. pluto
-			1.f,	1.f,	3.f,	1.2f,	1.f,	4.f,	17.f,	6.f,	16.f,	1.f, // 12. apollo 11 command module
-			1.f,	1.f,	7.f,	1.f,	0.f,	4.f,	10.f,	0.f,	10.f,	1.f, // 13. moon
-			1.f,	0.5f,	2.f,	1.f,	1.f,	14.f,	11.f,	1.f,	11.f,	1.f, // 14. ufo 
-			1.f,	0.5f,	0.3f,	1.05f,	1.f,	14.f,	12.f,	1.f,	11.f,	1.f, // 15. ufo 
-			1.f,	0.5f,	0.5f,	1.f,	1.f,	15.f,	12.f,	1.f,	11.f,	1.f, // 16. ufo 
-			1.f,	1.f,	3.f,	1.f,	0.f,	5.f,	13.f,	2.f,	12.f,	1.f, // 17. rocket 2
-			0.f,	0.9,	0.f,	1.f,	1.f,	8.f,	14.f,	3.f,	13.f,	1.f, // 18. saturn ring
-			0.f,	0.9,	0.f,	1.f,	1.f,	10.f,	15.f,	4.f,	14.f,	1.f, // 19. uranus ring
+			1.f,	0.6f,	5.f,	1.2f,	0.f,	2.f,	19.f,	7.f,	17.f,	1.f, // 3. electron rocket
+			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	3.f,	0.f,	3.f,	1.f, // 4. earth
+			1.f,	0.6f,	3.f,	1.2f,	1.f,	4.f,	17.f,	6.f,	16.f,	1.f, // 5. apollo 11 command module
+			1.f,	0.2f,	2.f,	1.f,	1.f,	4.f,	20.f,	8.f,	18.f,	1.f, // 5. satelite 1
+			1.f,	1.f,	5.f,	1.f,	0.f,	4.f,	10.f,	0.f,	10.f,	1.f, // 6. moon
+			1.f,	0.5f,	2.f,	1.f,	1.f,	7.f,	11.f,	1.f,	11.f,	1.f, // 7. ufo 
+			1.f,	0.5f,	0.3f,	1.05f,	1.f,	7.f,	12.f,	1.f,	11.f,	1.f, // 8. ufo 
+			1.f,	0.5f,	0.5f,	1.f,	1.f,	8.f,	12.f,	1.f,	11.f,	1.f, // 9. ufo 
+			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	4.f,	0.f,	4.f,	1.f, // 10. mars
+			1.f,	0.5f,	3.f,	1.f,	0.f,	11.f,	13.f,	2.f,	12.f,	1.f, // 11. rocket 2
+			1.f,	1.f,	5.f,	1.f,	1.f,	0.f,	16.f,	5.f,	15.f,	1.f, // 12. astroid 1
+			1.f,	1.f,	55.f,	1.f,	1.f,	0.f,	5.f,	0.f,	5.f,	1.f, // 13. jupiter
+			1.f,	1.f,	60.f,	1.f,	1.f,	0.f,	6.f,	0.f,	6.f,	1.f, // 14. saturn
+			0.f,	0.9,	0.f,	1.f,	1.f,	15.f,	14.f,	3.f,	13.f,	0.f, // 15. saturn ring
+			1.f,	1.f,	20.f,	1.5f,	0.f,	15.f,	18.f,	9.f,	19.f,	1.f, // 16. super heavy rocket
+			1.f,	1.f,	100.f,	1.f,	1.f,	0.f,	7.f,	0.f,	7.f,	1.f, // 17. uranus
+			0.f,	0.9,	0.f,	1.f,	1.f,	18.f,	15.f,	4.f,	14.f,	0.f, // 18. uranus ring
+			1.f,	1.f,	80.f,	1.f,	1.f,	0.f,	8.f,	0.f,	8.f,	1.f, // 19. neptune
+			1.f,	1.f,	40.f,	1.f,	1.f,	0.f,	9.f,	0.f,	9.f,	1.f, // 20. pluto
 	};
 	// TODO: add as much model as possible
 	// TODO: earth use multi textures, night city lights
@@ -436,6 +436,16 @@ int main(int argc, char** argv)
 	customBc.defaultSpinAngle = 90;
 	bodyConstants.push_back(customBc);
 
+	// 20 satelite 1
+	customBc.ascendingNode = 0;
+	customBc.axialTilt = 20;
+	customBc.inclination = 70;
+	customBc.localOrbitalPeriod = 0.0001;
+	customBc.orbitalPeriod = 30;
+	customBc.radius = 500;
+	customBc.defaultSpinAngle = 90;
+	bodyConstants.push_back(customBc);
+
 	// ========== math section ============
 
 	// parse configurations
@@ -459,7 +469,7 @@ int main(int argc, char** argv)
 		renderedBodies[i].bodyConstantIdx = bodiesCustomization[i * attributeCount + 6];
 		renderedBodies[i].VAOIdx = bodiesCustomization[i * attributeCount + 7];
 		renderedBodies[i].textureIdx = bodiesCustomization[i * attributeCount + 8];
-		renderedBodies[i].shaderIdx = bodiesCustomization[i * attributeCount + 9];
+		renderedBodies[i].modelViewed = (bool)bodiesCustomization[i * attributeCount + 9];
 	}
 
 	// compute scale relative to earth
@@ -628,7 +638,7 @@ int main(int argc, char** argv)
 		glm::mat4 projection = glm::mat4(1.f);
 		view = glm::lookAt(camera.getPosition(), camera.getPosition() + camera.getFront(), camera.getUp());
 		projection = glm::perspective(glm::radians(camera.getFOV()),
-			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 200000.f);
+			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 300000.f);
 
 		for (int i = 0; i < renderedBodies.size(); i++)
 		{
@@ -726,16 +736,28 @@ void processKeyboard(GLFWwindow* window)
 	// camera mode switching
 	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS && previousModelTrigger.toggle(glfwGetTime()))
 	{
-		modelSelection -= 1;
-		if (modelSelection == -1) modelSelection = renderedBodies.size() - 1;
+		while (true)
+		{
+			modelSelection -= 1;
+			if (modelSelection == -1) modelSelection = renderedBodies.size() - 1;
+			if (renderedBodies[modelSelection].modelViewed)	break;
+		}
+		//modelSelection -= 1;
+		//if (modelSelection == -1) modelSelection = renderedBodies.size() - 1;
 		if (!cameraMode) camera.setYaw(camera.getYaw() - 180.f); // fix camera flip 180
 		cameraMode = true;
 
 	}
 	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && nextModelTrigger.toggle(glfwGetTime()))
 	{
-		modelSelection += 1;
-		if (modelSelection > renderedBodies.size() - 1) modelSelection = 0;
+		while (true)
+		{
+			modelSelection += 1;
+			if (modelSelection > renderedBodies.size() - 1) modelSelection = 0;
+			if (renderedBodies[modelSelection].modelViewed)	break;
+		}
+		//modelSelection += 1;
+		//if (modelSelection > renderedBodies.size() - 1) modelSelection = 0;
 		if (!cameraMode) camera.setYaw(camera.getYaw() - 180.f); // fix camera flip 180
 		cameraMode = true;
 	}
