@@ -121,7 +121,9 @@ ObjectFileData ObjFileReader::read(const char* filename, bool parseMtl)
 
 ObjectFileData ObjFileReader::readObj(const char* filename) 
 {
-	
+	// ignore line boolean
+	bool detectedLineKeyword = false;
+
 	// input
 	ifstream inputFile(filename);
 
@@ -159,12 +161,18 @@ ObjectFileData ObjFileReader::readObj(const char* filename)
 		switch (key)
 		{
 			case NULL_KEYWORD:
-			case LINE_INDEX:
 				throw invalid_argument(
 					errString("ObjFileReader::Not Supported Keyword line", 
 						filename, line, lineCount));
 				break;
-
+			case LINE_INDEX:
+				if (!detectedLineKeyword)
+				{
+					cout << errString("ObjFileReader::Warning line vertex is not supported, thus ignored", 
+						filename, line, lineCount);
+				}
+				detectedLineKeyword = true;
+				break;
 			case COMMENT: // do nothing
 				break;
 			

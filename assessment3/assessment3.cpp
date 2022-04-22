@@ -65,8 +65,9 @@ float prevMouseX;
 float prevMouseY;
 
 // scene 
-int sunIdx = 0;
-int earthIdx = 3;
+int sunIdx = 0;		// THIS MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
+int earthIdx = 4;   // THIS MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
+
 float earthOrbitDelay = 600;
 glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 PlanetMath m;
@@ -109,7 +110,8 @@ int main(int argc, char** argv)
 	// ========= load objects =========
 
 	ObjFileReader ofr;
-	ObjectFileData sphereObj, ufoObj, rocket2Obj, saturnRingObj, uranusRingObj;
+	ObjectFileData sphereObj, ufoObj, rocket2Obj, saturnRingObj, uranusRingObj, astroid1Obj, 
+		commandModuleObj, electronRocketObj, satelite1Obj, superHeavyRocketObj;
 	cout << "Loading Objects...\n";
 	try
 	{
@@ -118,6 +120,11 @@ int main(int argc, char** argv)
 		rocket2Obj = ofr.read("resources/rocket_2/rocket_2.obj");
 		saturnRingObj = ofr.read("resources/solar_system/ring_huge.obj");
 		uranusRingObj = ofr.read("resources/solar_system/ring_small.obj");
+		astroid1Obj = ofr.read("resources/astroid_1/astroid_1.obj");
+		commandModuleObj = ofr.read("resources/command_module/command_module.obj");
+		electronRocketObj = ofr.read("resources/electron/electron.obj");
+		satelite1Obj = ofr.read("resources/satelite_1/satelite_1.obj");
+		superHeavyRocketObj = ofr.read("resources/super_heavy/super_heavy.obj");
 	}
 	catch (const std::exception& e)
 	{
@@ -131,6 +138,11 @@ int main(int argc, char** argv)
 	vector<float>& rocket2Vert = rocket2Obj.subObjects[0].expandedVertices;
 	vector<float>& saturnRingVert = saturnRingObj.subObjects[0].expandedVertices;
 	vector<float>& uranusRingVert = uranusRingObj.subObjects[0].expandedVertices;
+	vector<float>& astroid1Vert = astroid1Obj.subObjects[0].expandedVertices;
+	vector<float>& commandModuleVert = commandModuleObj.subObjects[0].expandedVertices;
+	vector<float>& electronRocketVert = electronRocketObj.subObjects[0].expandedVertices;
+	vector<float>& satelite1Vert = satelite1Obj.subObjects[0].expandedVertices;
+	vector<float>& superHeavyRocketVert = superHeavyRocketObj.subObjects[0].expandedVertices;
 	cout << "Objects Loaded\n\n";
 
 
@@ -169,6 +181,11 @@ int main(int argc, char** argv)
 	GLuint plutoTexture = loadTexture("resources/solar_system/textures/pluto.jpg");
 	GLuint ufoTexture = loadTexture("resources/ufo_1/ufo_kd.jpg");
 	GLuint rocket2Texture = loadTexture("resources/rocket_2/rocket.jpg");
+	GLuint astroid1Texture = loadTexture("resources/astroid_1/astroid_1.jpg");
+	GLuint commandModuleTexture = loadTexture("resources/command_module/command_module.png");
+	GLuint electronRocketTexture = loadTexture("resources/electron/electron.png");
+	GLuint satelite1Texture = loadTexture("resources/satelite_1/satelite_1.jpg");
+	GLuint superHeavyRocketTexture = loadTexture("resources/super_heavy/super_heavy.png");
 	vector<string> files = {
 		"resources/skybox/right.jpg",
 		"resources/skybox/left.jpg",
@@ -196,6 +213,11 @@ int main(int argc, char** argv)
 		{ rocket2Texture },
 		{ saturnRingTexture },
 		{ uranusRingTexture },
+		{ astroid1Texture },
+		{ commandModuleTexture },
+		{ electronRocketTexture },
+		{ satelite1Texture },
+		{ superHeavyRocketTexture },
 	};
 
 
@@ -214,6 +236,16 @@ int main(int argc, char** argv)
 	glSetupVertexObject(saturnRingVAO, saturnRingVBO, saturnRingVert, vector<int>{3, 2, 3});
 	unsigned int uranusRingVAO, uranusRingVBO;
 	glSetupVertexObject(uranusRingVAO, uranusRingVBO, uranusRingVert, vector<int>{3, 2, 3});
+	unsigned int astroid1VAO, astroid1VBO;
+	glSetupVertexObject(astroid1VAO, astroid1VBO, astroid1Vert, vector<int>{3, 2, 3});
+	unsigned int commandModuleVAO, commandModuleVBO;
+	glSetupVertexObject(commandModuleVAO, commandModuleVBO, commandModuleVert, vector<int>{3, 2, 3});
+	unsigned int electronRocketVAO, electronRocketVBO;
+	glSetupVertexObject(electronRocketVAO, electronRocketVBO, electronRocketVert, vector<int>{3, 2, 3});
+	unsigned int satelite1VAO, satelite1VBO;
+	glSetupVertexObject(satelite1VAO, satelite1VBO, satelite1Vert, vector<int>{3, 2, 3});
+	unsigned int superHeavyRocketVAO, superHeavyRocketVBO;
+	glSetupVertexObject(superHeavyRocketVAO, superHeavyRocketVBO, superHeavyRocketVert, vector<int>{3, 2, 3});
 	unsigned int skyVAO, skyVBO;
 	glSetupVertexObject(skyVAO, skyVBO, skyboxVert, vector<int>{3});
 
@@ -223,6 +255,11 @@ int main(int argc, char** argv)
 		rocket2VAO,
 		saturnRingVAO,
 		uranusRingVAO,
+		astroid1VAO,
+		commandModuleVAO,
+		electronRocketVAO,
+		satelite1VAO,
+		superHeavyRocketVAO,
 	};
 
 	vector<int> vertexSize{
@@ -231,6 +268,11 @@ int main(int argc, char** argv)
 		(int)rocket2Vert.size() / 8,
 		(int)saturnRingVert.size() / 8,
 		(int)uranusRingVert.size() / 8,
+		(int)astroid1Vert.size() / 8,
+		(int)commandModuleVert.size() / 8,
+		(int)electronRocketVert.size() / 8,
+		(int)satelite1Vert.size() / 8,
+		(int)superHeavyRocketVert.size() / 8,
 	};
 
 	// remove binding
@@ -249,8 +291,8 @@ int main(int argc, char** argv)
 
 	// model hyper params				(tweak these to adjust scene)
 
-	float distanceModifier = 70;		// master distance margin scale
-	float earthScale = 60;				// master scale
+	float distanceModifier = 240;		// master distance margin scale
+	float earthScale = 200;				// master scale
 
 	// all these values have to change if customization structure is changed
 	int attributeCount = 10;
@@ -276,28 +318,34 @@ int main(int argc, char** argv)
 		//
 		// rules: orbited object must come before orbiting object as some calculations 
 		//			are depending on their primary object
-		//
-		//  a		s		m		ov		rd		pr		bc		vao		tx		sd
+		// earthIdx MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
+		// sunIdx MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
+		// 
+		//  a		s		m		ov		rd		pr*		bc		vao		tx		sd
 			0.f,	0.3f,	0.f,	1.f,	1.f,	-1.f,	0.f,	0.f,	0.f,	0.f, // 0. sun
 			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	1.f,	0.f,	1.f,	1.f, // 1. mercury
 			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	2.f,	0.f,	2.f,	1.f, // 2. venus
+			1.f,	2.f,	5.f,	1.2f,	0.f,	2.f,	19.f,	7.f,	17.f,	1.f, // 20. electron rocket
 			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	3.f,	0.f,	3.f,	1.f, // 3. earth
 			1.f,	1.f,	20.f,	1.f,	1.f,	0.f,	4.f,	0.f,	4.f,	1.f, // 4. mars
-			1.f,	1.f,	60.f,	1.f,	1.f,	0.f,	5.f,	0.f,	5.f,	1.f, // 5. jupiter
-			1.f,	1.f,	60.f,	1.f,	1.f,	0.f,	6.f,	0.f,	6.f,	1.f, // 6. saturn
-			1.f,	1.f,	100.f,	1.f,	1.f,	0.f,	7.f,	0.f,	7.f,	1.f, // 7. uranus
-			1.f,	1.f,	80.f,	1.f,	1.f,	0.f,	8.f,	0.f,	8.f,	1.f, // 8. neptune
-			1.f,	1.f,	40.f,	1.f,	1.f,	0.f,	9.f,	0.f,	9.f,	1.f, // 9. pluto
-			1.f,	1.f,	10.f,	1.f,	0.f,	3.f,	10.f,	0.f,	10.f,	1.f, // 10. moon
-			1.f,	1.f,	2.f,	1.f,	1.f,	10.f,	11.f,	1.f,	11.f,	1.f, // 11. ufo 
-			1.f,	1.f,	0.3f,	1.05f,	1.f,	10.f,	12.f,	1.f,	11.f,	1.f, // 12. ufo 
-			1.f,	1.f,	0.5f,	1.f,	1.f,	11.f,	12.f,	1.f,	11.f,	1.f, // 13. ufo 
-			1.f,	0.5,	3.f,	1.f,	0.f,	4.f,	13.f,	2.f,	12.f,	1.f, // 14. rocket 2
-			0.f,	0.9,	0.f,	1.f,	1.f,	6.f,	14.f,	3.f,	13.f,	1.f, // 15. saturn ring
-			0.f,	0.9,	0.f,	1.f,	1.f,	7.f,	15.f,	4.f,	14.f,	1.f, // 16. uranus ring
+			1.f,	1.f,	5.f,	1.f,	1.f,	0.f,	16.f,	5.f,	15.f,	1.f, // 5. astroid 1
+			1.f,	1.f,	55.f,	1.f,	1.f,	0.f,	5.f,	0.f,	5.f,	1.f, // 6. jupiter
+			1.f,	1.f,	60.f,	1.f,	1.f,	0.f,	6.f,	0.f,	6.f,	1.f, // 7. saturn
+			1.f,	1.f,	20.f,	1.5f,	0.f,	8.f,	18.f,	9.f,	19.f,	1.f, // 8. super heavy rocket
+			1.f,	1.f,	100.f,	1.f,	1.f,	0.f,	7.f,	0.f,	7.f,	1.f, // 9. uranus
+			1.f,	1.f,	80.f,	1.f,	1.f,	0.f,	8.f,	0.f,	8.f,	1.f, // 10. neptune
+			1.f,	1.f,	40.f,	1.f,	1.f,	0.f,	9.f,	0.f,	9.f,	1.f, // 11. pluto
+			1.f,	1.f,	3.f,	1.2f,	1.f,	4.f,	17.f,	6.f,	16.f,	1.f, // 12. apollo 11 command module
+			1.f,	1.f,	7.f,	1.f,	0.f,	4.f,	10.f,	0.f,	10.f,	1.f, // 13. moon
+			1.f,	0.5f,	2.f,	1.f,	1.f,	14.f,	11.f,	1.f,	11.f,	1.f, // 14. ufo 
+			1.f,	0.5f,	0.3f,	1.05f,	1.f,	14.f,	12.f,	1.f,	11.f,	1.f, // 15. ufo 
+			1.f,	0.5f,	0.5f,	1.f,	1.f,	15.f,	12.f,	1.f,	11.f,	1.f, // 16. ufo 
+			1.f,	1.f,	3.f,	1.f,	0.f,	5.f,	13.f,	2.f,	12.f,	1.f, // 17. rocket 2
+			0.f,	0.9,	0.f,	1.f,	1.f,	8.f,	14.f,	3.f,	13.f,	1.f, // 18. saturn ring
+			0.f,	0.9,	0.f,	1.f,	1.f,	10.f,	15.f,	4.f,	14.f,	1.f, // 19. uranus ring
 	};
 	// TODO: add as much model as possible
-	// TODO: earth use multi textures
+	// TODO: earth use multi textures, night city lights
 
 	renderedBodies.resize(bodiesCustomization.size() / attributeCount);
 	renderedBodies[sunIdx].position = vec3ToVec(lightPos);
@@ -309,40 +357,40 @@ int main(int argc, char** argv)
 	// this part is just pure creativity nothing technical
 	BodyConst customBc;
 
-	// 11
+	// 11 ufo
 	customBc.ascendingNode = 0;									// adjust orbit ascending starting point (degree)
 	customBc.axialTilt = 180;									// adjust axial tilt relative to orbit plane (degree)
 	customBc.inclination = 180 + 30;							// adjust orbit inclination angle (degree)
 	customBc.localOrbitalPeriod = 30;							// number of spins per orbit
 	customBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 8;	// orbit duration
-	customBc.radius = PConst::MOON_RADIUS / 3;					// object size (will be scaled relative to earth)
+	customBc.radius = 400;										// object size (will be scaled relative to earth)
 	bodyConstants.push_back(customBc);
 
-	// 12
+	// 12 ufo
 	customBc.axialTilt += 10;
 	customBc.inclination += 10;
 	customBc.ascendingNode = 90;
 	customBc.orbitalPeriod = PConst::MOON_ORBITAL_PERIOD / 10;
 	bodyConstants.push_back(customBc);
 
-	// 13
+	// 13 rocket 2
 	customBc.ascendingNode = 0;	
 	customBc.axialTilt = 0;		
 	customBc.inclination = 20;	
 	customBc.localOrbitalPeriod = 1;						
 	customBc.orbitalPeriod = 30;
-	customBc.radius = 75;	
+	customBc.radius = 50;	
 	customBc.defaultSpinAngle = 90;	 // spin angle relative to orbit angle (make rocket perpendicular to orbit center)
 	bodyConstants.push_back(customBc);
 
-	// 14
+	// 14 ring
 	customBc.ascendingNode = 0;
 	customBc.axialTilt = 2;
 	customBc.inclination = 0;
 	customBc.radius = PConst::SATURN_RADIUS;
 	bodyConstants.push_back(customBc);
 
-	// 15
+	// 15 ring
 	customBc.ascendingNode = 0;
 	customBc.axialTilt = PConst::URANUS_AXIAL_TILT;
 	customBc.inclination = 0;
@@ -350,6 +398,43 @@ int main(int argc, char** argv)
 	customBc.defaultSpinAngle = 0;
 	bodyConstants.push_back(customBc);
 
+	// 16 astroid
+	customBc.ascendingNode = 10;
+	customBc.axialTilt = 10;
+	customBc.inclination = 5;
+	customBc.localOrbitalPeriod = 1;
+	customBc.orbitalPeriod = 600;
+	customBc.radius = PConst::MARS_RADIUS / 2;
+	bodyConstants.push_back(customBc);
+
+	// 17 command module
+	customBc.ascendingNode = 40;
+	customBc.axialTilt = 70;
+	customBc.inclination = 40;
+	customBc.localOrbitalPeriod = 0.1;
+	customBc.orbitalPeriod = 30;
+	customBc.radius = 500;
+	bodyConstants.push_back(customBc);
+
+	// 18 super heavy rocket
+	customBc.ascendingNode = 70;
+	customBc.axialTilt = 0;
+	customBc.inclination = 35;
+	customBc.localOrbitalPeriod = 1;
+	customBc.orbitalPeriod = 60;
+	customBc.radius = 500;
+	customBc.defaultSpinAngle = 90;
+	bodyConstants.push_back(customBc);
+
+	// 19 electron
+	customBc.ascendingNode = 20;
+	customBc.axialTilt = 10;
+	customBc.inclination = 35;
+	customBc.localOrbitalPeriod = 1;
+	customBc.orbitalPeriod = 30;
+	customBc.radius = 500;
+	customBc.defaultSpinAngle = 90;
+	bodyConstants.push_back(customBc);
 
 	// ========== math section ============
 
@@ -521,7 +606,7 @@ int main(int argc, char** argv)
 				}
 
 				// animate orbit of current object with a origin of parent's position
-				animators[animatorIdx].animate(ms_time, 2, 4, sceneState.getJustStarted());
+				animators[animatorIdx].animate(ms_time, 5, 5, sceneState.getJustStarted());
 
 				// retrieve position
 				renderedBodies[i].position = animators[animatorIdx].getOrbitPosition();
@@ -991,8 +1076,8 @@ void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, General
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].specularStrength"), 0.3f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].shininess"), 16.f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].constant"), 1.0f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].linear"), 0.00000014f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].quadratic"), 0.0000000007f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].linear"), 0.000000014f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].quadratic"), 0.00000000007f);
 
 	glUniform1i(glGetUniformLocation(shaderProgram, "torchLight"), torch);
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light[1].direction"), 1, &cam.getFront()[0]);
@@ -1003,8 +1088,8 @@ void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, General
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].specularStrength"), 0.3f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].shininess"), 16.f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].constant"), 1.0f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].linear"), 0.000005f);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].quadratic"), 0.00000015f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].linear"), 0.0000005f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].quadratic"), 0.000000015f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].phi"), 25.f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[1].gamma"), 35.f);
 }

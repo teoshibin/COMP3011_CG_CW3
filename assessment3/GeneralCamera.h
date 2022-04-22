@@ -52,11 +52,11 @@ private:
 	float yaw = -90.f;
 	float pitch = 0.f;
 
-	float movementSpeed = 8.f;
+	float movementSpeed = 25.f;
 	float mouseSensitivity = .05f;
 	float modelViewSpeed = 0.2f;
 	float FOV = 70.f;
-	float modelViewDistance = 2000.f;
+	float modelViewDistance = 4000.f;
 
 	// fly through camera
 	glm::vec3 calculateHorizontalFront();
