@@ -68,7 +68,7 @@ float prevMouseY;
 int sunIdx = 0;		// THIS MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
 int earthIdx = 4;   // THIS MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
 
-float earthOrbitDelay = 600;
+float earthOrbitDelay = 3600;
 glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 PlanetMath m;
 vector<RenderedBody> renderedBodies;
@@ -645,7 +645,7 @@ int main(int argc, char** argv)
 		glm::mat4 projection = glm::mat4(1.f);
 		view = glm::lookAt(camera.getPosition(), camera.getPosition() + camera.getFront(), camera.getUp());
 		projection = glm::perspective(glm::radians(camera.getFOV()),
-			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 0.1f, 300000.f);
+			(float)WINDOW_WIDTH / (float)WINDOW_HEIGHT, 10.f, 400000.f);
 
 		for (int i = 0; i < renderedBodies.size(); i++)
 		{
