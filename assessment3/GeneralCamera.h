@@ -20,7 +20,7 @@ public:
 	GeneralCamera();
 
 	// fly through camera
-	void moveCamera(CameraMovement direction);
+	void moveCamera(CameraMovement direction, float moveSizeRatio);
 	void orientCamera(float xoffset, float yoffset);
 
 	// model view camera

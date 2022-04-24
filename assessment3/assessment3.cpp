@@ -57,6 +57,8 @@ void displaySkyBox(unsigned int& VAO, GLuint texture, unsigned int shaderProgram
 // settings
 int WINDOW_WIDTH = 1280;
 int WINDOW_HEIGHT = 800;
+float targetFPS = 144.f;
+DelayTrigger frameTrigger = DelayTrigger(1.f / targetFPS);
 
 // camera and camera control
 GeneralCamera camera;
@@ -67,7 +69,6 @@ float prevMouseY;
 // scene 
 int sunIdx = 0;		// THIS MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
 int earthIdx = 4;   // THIS MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
-
 float earthOrbitDelay = 3600;
 glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 PlanetMath m;
@@ -75,15 +76,32 @@ vector<RenderedBody> renderedBodies;
 vector<BodyConst> bodyConstants;
 vector<OrbitAnimator> animators;
 
-// interaction
-SceneState sceneState;
-DelayTrigger torchLightTrigger;
-DelayTrigger randomizeAngleTrigger;
-DelayTrigger flyThroughTrigger;
-DelayTrigger previousModelTrigger;
-DelayTrigger nextModelTrigger;
+// camera mode 
+DelayTrigger fTrigger;
+DelayTrigger rTrigger;
+DelayTrigger leftCtrlTrigger;
+DelayTrigger qTrigger;
+DelayTrigger eTrigger;
 bool cameraMode = false;
 int modelSelection = 0;
+
+// camera movement
+DelayTrigger wTrigger = DelayTrigger(0.002f);
+DelayTrigger aTrigger = DelayTrigger(0.002f);
+DelayTrigger sTrigger = DelayTrigger(0.002f);
+DelayTrigger dTrigger = DelayTrigger(0.002f);
+DelayTrigger leftShiftTrigger = DelayTrigger(0.002f);
+DelayTrigger spaceTrigger = DelayTrigger(0.002f);
+DelayTrigger zTrigger = DelayTrigger(0.002f);
+DelayTrigger cTrigger = DelayTrigger(0.002f);
+
+// scene adjustment
+SceneState sceneState;
+DelayTrigger commaTrigger = DelayTrigger(0.002f);
+DelayTrigger periodTrigger = DelayTrigger(0.002f);
+DelayTrigger leftBracketTrigger = DelayTrigger(0.002f);
+DelayTrigger rightBracketTrigger = DelayTrigger(0.002f);
+
 
 // ==================== main =======================
 
@@ -588,10 +606,31 @@ int main(int argc, char** argv)
 	glm::vec3 Yaxis = glm::vec3(0.f, 1.f, 0.f);
 	glm::vec3 Zaxis = glm::vec3(0.f, 0.f, 1.f);
 
+	float ptime = glfwGetTime();
+	float ftime = ptime;
+	int fpsCount = 0;
+
 	while (!glfwWindowShouldClose(window))
 	{
 		// input
 		processKeyboard(window);
+
+		// fps 
+		if (!frameTrigger.toggle(glfwGetTime()))
+		{
+			continue;
+		}
+		ftime = glfwGetTime();
+		if ((ftime - ptime) >= 10.f)
+		{
+			cout << "Avg FPS: " << fpsCount / (ftime - ptime) << endl;
+			ptime = ftime;
+			fpsCount = 0;
+		}
+		else
+		{
+			fpsCount++;
+		}
 
 		// animate animated objects (some object might just require rendering but not animating)
 		if (sceneState.getCanUpdateAnimation())
@@ -715,7 +754,7 @@ int main(int argc, char** argv)
 				// for earth use special shader
 				if (i == earthIdx)
 				{
-					glSetLightingConfig(earthShaderProgram, lightPos, camera, torchLightTrigger.getValue());
+					glSetLightingConfig(earthShaderProgram, lightPos, camera, fTrigger.getValue());
 					glUniform1f(glGetUniformLocation(earthShaderProgram, "light[0].ambientStrength"), 0.1f);
 					glSetModelViewProjection(earthShaderProgram, model, view, projection);
 					glBindVertexArray(VAOs[rb.VAOIdx]);
@@ -729,7 +768,7 @@ int main(int argc, char** argv)
 				}
 				else
 				{
-					glSetLightingConfig(illumShaderProgram, lightPos, camera, torchLightTrigger.getValue());
+					glSetLightingConfig(illumShaderProgram, lightPos, camera, fTrigger.getValue());
 					glSetModelViewProjection(illumShaderProgram, model, view, projection);
 					glDrawVertexTriangles(VAOs[rb.VAOIdx], textures[txIdx][0], vertexSize[rb.VAOIdx]);
 				}
@@ -761,7 +800,7 @@ void processKeyboard(GLFWwindow* window)
 	if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS) glfwSetWindowShouldClose(window, true);
 
 	// camera mode switching
-	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS && previousModelTrigger.toggle(glfwGetTime()))
+	if (glfwGetKey(window, GLFW_KEY_Q) == GLFW_PRESS && qTrigger.toggle(glfwGetTime()))
 	{
 		while (true)
 		{
@@ -769,13 +808,11 @@ void processKeyboard(GLFWwindow* window)
 			if (modelSelection == -1) modelSelection = renderedBodies.size() - 1;
 			if (renderedBodies[modelSelection].modelViewed)	break;
 		}
-		//modelSelection -= 1;
-		//if (modelSelection == -1) modelSelection = renderedBodies.size() - 1;
 		if (!cameraMode) camera.setYaw(camera.getYaw() - 180.f); // fix camera flip 180
 		cameraMode = true;
 
 	}
-	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && nextModelTrigger.toggle(glfwGetTime()))
+	if (glfwGetKey(window, GLFW_KEY_E) == GLFW_PRESS && eTrigger.toggle(glfwGetTime()))
 	{
 		while (true)
 		{
@@ -783,12 +820,10 @@ void processKeyboard(GLFWwindow* window)
 			if (modelSelection > renderedBodies.size() - 1) modelSelection = 0;
 			if (renderedBodies[modelSelection].modelViewed)	break;
 		}
-		//modelSelection += 1;
-		//if (modelSelection > renderedBodies.size() - 1) modelSelection = 0;
 		if (!cameraMode) camera.setYaw(camera.getYaw() - 180.f); // fix camera flip 180
 		cameraMode = true;
 	}
-	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && flyThroughTrigger.toggle(glfwGetTime()))
+	if (glfwGetKey(window, GLFW_KEY_LEFT_CONTROL) == GLFW_PRESS && leftCtrlTrigger.toggle(glfwGetTime()))
 	{
 		if (cameraMode)
 		{
@@ -806,45 +841,51 @@ void processKeyboard(GLFWwindow* window)
 	// fly through camera
 	if (!cameraMode)
 	{
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)		 	camera.moveCamera(CameraMovement::FORWARD);
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)			camera.moveCamera(CameraMovement::BACKWARD);
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)			camera.moveCamera(CameraMovement::LEFT);
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)			camera.moveCamera(CameraMovement::RIGHT);
-		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS)		camera.moveCamera(CameraMovement::UPWARD);
-		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS)	camera.moveCamera(CameraMovement::DOWNWARD);
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && wTrigger.toggle(glfwGetTime())) 
+			camera.moveCamera(CameraMovement::FORWARD, wTrigger.getDiffRatio());
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && sTrigger.toggle(glfwGetTime()))	
+			camera.moveCamera(CameraMovement::BACKWARD, sTrigger.getDiffRatio());
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && aTrigger.toggle(glfwGetTime()))	
+			camera.moveCamera(CameraMovement::LEFT, aTrigger.getDiffRatio());
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && dTrigger.toggle(glfwGetTime()))	
+			camera.moveCamera(CameraMovement::RIGHT, dTrigger.getDiffRatio());
+		if (glfwGetKey(window, GLFW_KEY_SPACE) == GLFW_PRESS && spaceTrigger.toggle(glfwGetTime()))	
+			camera.moveCamera(CameraMovement::UPWARD, spaceTrigger.getDiffRatio());
+		if (glfwGetKey(window, GLFW_KEY_LEFT_SHIFT) == GLFW_PRESS && leftShiftTrigger.toggle(glfwGetTime())) 
+			camera.moveCamera(CameraMovement::DOWNWARD, leftShiftTrigger.getDiffRatio());
 	}
 	// model view camera
 	else
 	{
 		float x = 0.f, y = 0.f;
-		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS && dTrigger.toggle(glfwGetTime()))
 		{
-			x = 1.f;
-			y = 0.f;
+			x += 1.f * dTrigger.getDiffRatio();
+			y += 0.f * dTrigger.getDiffRatio();
 		}
-		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS && aTrigger.toggle(glfwGetTime()))
 		{
-			x = -1.f;
-			y = 0.f;
+			x += -1.f * aTrigger.getDiffRatio();
+			y += 0.f * aTrigger.getDiffRatio();
 		}
-		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS && wTrigger.toggle(glfwGetTime()))
 		{
-			x = 0.f;
-			y = -1.f;
+			x += 0.f * wTrigger.getDiffRatio();
+			y += -1.f * wTrigger.getDiffRatio();
 		}
-		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS && sTrigger.toggle(glfwGetTime()))
 		{
-			x = 0.f;
-			y = 1.f;
+			x += 0.f * sTrigger.getDiffRatio();
+			y += 1.f * sTrigger.getDiffRatio();
 		}
-		if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS && zTrigger.toggle(glfwGetTime()))
 		{
-			float stepSize = powf(10, log10f(camera.getModelViewDistance()) - 1) * 0.05;
+			float stepSize = powf(10, log10f(camera.getModelViewDistance()) - 1) * 0.05 * zTrigger.getDiffRatio();
 			camera.increaseModelViewDistance(stepSize);
 		}
-		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
+		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS && cTrigger.toggle(glfwGetTime()))
 		{
-			float stepSize = powf(10, log10f(camera.getModelViewDistance()) - 1) * 0.05;
+			float stepSize = powf(10, log10f(camera.getModelViewDistance()) - 1) * 0.05 * cTrigger.getDiffRatio();
 			camera.decreaseModelViewDistance(stepSize);
 		}
 		camera.moveAndOrientCamera(
@@ -852,18 +893,24 @@ void processKeyboard(GLFWwindow* window)
 	}
 
 	// general camera
-	if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS) camera.decreaseFOV(0.05f);
-	if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS) camera.increaseFOV(0.05f);
+	if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS && leftBracketTrigger.toggle(glfwGetTime())) 
+		camera.decreaseFOV(0.05f * leftBracketTrigger.getDiffRatio());
+	if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS && rightBracketTrigger.toggle(glfwGetTime()))
+		camera.increaseFOV(0.05f * rightBracketTrigger.getDiffRatio());
 	
 		
 	// pausing
-	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) sceneState.pauseScene(glfwGetTime());
+	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) 
+		sceneState.pauseScene(glfwGetTime());
+	
 	// toggle player torch light
-	if ((glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS))	torchLightTrigger.toggle(glfwGetTime());
+	if ((glfwGetKey(window, GLFW_KEY_F) == GLFW_PRESS))
+		fTrigger.toggle(glfwGetTime());
+	
 	// speed up
-	if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_PERIOD) == GLFW_PRESS && commaTrigger.toggle(glfwGetTime()))
 	{
-		float stepSize = powf(10, log10f(earthOrbitDelay) - 1) * 0.05;
+		float stepSize = powf(10, log10f(earthOrbitDelay) - 1) * 0.02 * commaTrigger.getDiffRatio();
 		float newValue = earthOrbitDelay - stepSize;
 		if (newValue > 0.01)
 		{
@@ -873,9 +920,9 @@ void processKeyboard(GLFWwindow* window)
 		}
 	}
 	// slow down
-	if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS)
+	if (glfwGetKey(window, GLFW_KEY_COMMA) == GLFW_PRESS && periodTrigger.toggle(glfwGetTime()))
 	{
-		float stepSize = powf(10, log10f(earthOrbitDelay) - 1) * 0.05;
+		float stepSize = powf(10, log10f(earthOrbitDelay) - 1) * 0.02 * periodTrigger.getDiffRatio();
 		float newValue = earthOrbitDelay + stepSize;
 		if (newValue < 86401)
 		{
@@ -884,11 +931,12 @@ void processKeyboard(GLFWwindow* window)
 			cout << "Earth 1yr = " << earthOrbitDelay << "s\n";
 		}
 	}
+
 	// randomize orbit angle
 	if (glfwGetKey(window, GLFW_KEY_R) == GLFW_PRESS)
 	{
 		// if toggled then trigger (the internal state doesn't matter)
-		if (randomizeAngleTrigger.toggle(glfwGetTime()))
+		if (rTrigger.toggle(glfwGetTime()))
 		{
 			randomizeOrbitAngles();
 		}
