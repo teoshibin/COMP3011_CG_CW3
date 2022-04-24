@@ -99,7 +99,7 @@ int main(int argc, char** argv)
 	glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED); // disable mouse
 	glfwSetCursorPosCallback(window, processMouse);		// set mouse event callback
 	gladLoadGLLoader((GLADloadproc)glfwGetProcAddress); // init glad
-	
+
 
 	// ====================== OPENGL ======================		
 
@@ -110,7 +110,7 @@ int main(int argc, char** argv)
 	// ========= load objects =========
 
 	ObjFileReader ofr;
-	ObjectFileData sphereObj, ufoObj, rocket2Obj, saturnRingObj, uranusRingObj, astroid1Obj, 
+	ObjectFileData sphereObj, ufoObj, rocket2Obj, saturnRingObj, uranusRingObj, astroid1Obj,
 		commandModuleObj, electronRocketObj, satelite1Obj, superHeavyRocketObj;
 	cout << "Loading Objects...\n";
 	try
@@ -232,7 +232,7 @@ int main(int argc, char** argv)
 	unsigned int ufoVAO, ufoVBO;
 	glSetupVertexObject(ufoVAO, ufoVBO, ufoVert, vector<int>{3, 2, 3});
 	unsigned int rocket2VAO, rocket2VBO;
-	glSetupVertexObject(rocket2VAO, rocket2VBO, rocket2Vert, vector<int>{3,2,3});
+	glSetupVertexObject(rocket2VAO, rocket2VBO, rocket2Vert, vector<int>{3, 2, 3});
 	unsigned int saturnRingVAO, saturnRingVBO;
 	glSetupVertexObject(saturnRingVAO, saturnRingVBO, saturnRingVert, vector<int>{3, 2, 3});
 	unsigned int uranusRingVAO, uranusRingVBO;
@@ -376,12 +376,12 @@ int main(int argc, char** argv)
 	bodyConstants.push_back(customBc);
 
 	// 13 rocket 2
-	customBc.ascendingNode = 0;	
-	customBc.axialTilt = 0;		
-	customBc.inclination = 20;	
-	customBc.localOrbitalPeriod = 1;						
+	customBc.ascendingNode = 0;
+	customBc.axialTilt = 0;
+	customBc.inclination = 20;
+	customBc.localOrbitalPeriod = 1;
 	customBc.orbitalPeriod = 30;
-	customBc.radius = 50;	
+	customBc.radius = 50;
 	customBc.defaultSpinAngle = 90;	 // spin angle relative to orbit angle (make rocket perpendicular to orbit center)
 	bodyConstants.push_back(customBc);
 
@@ -545,7 +545,7 @@ int main(int argc, char** argv)
 	for (int i = 0; i < renderedBodies.size(); i++)
 	{
 		// not animated and not following other object
-		if (renderedBodies[i].animatorIdx == -1 && renderedBodies[i].orbitParentIdx == -1) continue; 
+		if (renderedBodies[i].animatorIdx == -1 && renderedBodies[i].orbitParentIdx == -1) continue;
 		int parentIndex = renderedBodies[i].orbitParentIdx;
 		renderedBodies[i].parentsAscendingNodeSum = m.sumAllAscendingNodes(
 			renderedBodies, bodyConstants, parentIndex);
@@ -561,7 +561,7 @@ int main(int argc, char** argv)
 		int bodyConstantIndex = renderedBodies[i].bodyConstantIdx;
 		animators.push_back(
 			OrbitAnimator(delays[animatorIndex], bodyConstants[bodyConstantIndex].localOrbitalPeriod,
-				renderedBodies[i].ovalRatio, renderedBodies[i].orbitRadius,	renderedBodies[i].allInclinationSum)
+				renderedBodies[i].ovalRatio, renderedBodies[i].orbitRadius, renderedBodies[i].allInclinationSum)
 		);
 	}
 
@@ -674,7 +674,7 @@ int main(int argc, char** argv)
 			else
 			{
 				RenderedBody& pr = renderedBodies[rb.orbitParentIdx];
-				
+
 				// use special shader for earth
 				if (i == earthIdx) glUseProgram(earthShaderProgram);
 				else glUseProgram(illumShaderProgram);
@@ -698,17 +698,17 @@ int main(int argc, char** argv)
 
 				// create sphere spin
 				model = glm::rotate(model, glm::radians(rb.rotation), Yaxis);
-				
+
 				// scale to correct size
-				model = glm::scale(model, glm::vec3(rb.scale));			
+				model = glm::scale(model, glm::vec3(rb.scale));
 
 				// store actual position for model view camera
 				glm::vec4 actualPos = model * glm::vec4(0, 0, 0, 1);
 				rb.finalPosition = vec3ToVec(
 					glm::vec3(
-						actualPos[0]/actualPos[3], 
-						actualPos[1]/actualPos[3], 
-						actualPos[2]/actualPos[3]
+						actualPos[0] / actualPos[3],
+						actualPos[1] / actualPos[3],
+						actualPos[2] / actualPos[3]
 					)
 				);
 
@@ -854,8 +854,8 @@ void processKeyboard(GLFWwindow* window)
 	// general camera
 	if (glfwGetKey(window, GLFW_KEY_LEFT_BRACKET) == GLFW_PRESS) camera.decreaseFOV(0.05f);
 	if (glfwGetKey(window, GLFW_KEY_RIGHT_BRACKET) == GLFW_PRESS) camera.increaseFOV(0.05f);
-	
-		
+
+
 	// pausing
 	if (glfwGetKey(window, GLFW_KEY_P) == GLFW_PRESS) sceneState.pauseScene(glfwGetTime());
 	// toggle player torch light
@@ -912,7 +912,7 @@ void processMouse(GLFWwindow* window, double x, double y)
 
 	if (!cameraMode)
 	{
- 		camera.orientCamera(dX, dY);
+		camera.orientCamera(dX, dY);
 	}
 }
 

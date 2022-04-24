@@ -13,39 +13,9 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
-    <Filter Include="Source Files\vendor">
-      <UniqueIdentifier>{e19c1d8f-c19b-48bb-b5f9-03cd33da5a3b}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\vendor">
-      <UniqueIdentifier>{a6c4c2ce-24bd-4b64-b865-d6ed37c41b18}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Resource Files\shaders">
-      <UniqueIdentifier>{f5d71044-e439-4400-9b8e-2235b8c186bf}</UniqueIdentifier>
-    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="assessment3.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="shapes.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="modelReader.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="OrbitAnimator.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="stb_image.cpp">
-      <Filter>Source Files\vendor</Filter>
-    </ClCompile>
-    <ClCompile Include="libraries\include\glad\glad.c">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="SceneState.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="PlanetMath.cpp">
+    <ClCompile Include="assignment3.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="DelayTrigger.cpp">
@@ -54,42 +24,33 @@
     <ClCompile Include="GeneralCamera.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="modelReader.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OrbitAnimator.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="PlanetMath.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="SceneState.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="shapes.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="stb_image.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="libraries\include\glad\glad.c">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="camera.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="shader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="util.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="window.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="bitmap.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="texture.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="shapes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="modelReader.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="OrbitAnimator.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="stb_image.h">
-      <Filter>Header Files\vendor</Filter>
-    </ClInclude>
-    <ClInclude Include="SceneState.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="PlanetMath.h">
+    <ClInclude Include="camera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="DelayTrigger.h">
@@ -98,37 +59,67 @@
     <ClInclude Include="GeneralCamera.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="modelReader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OrbitAnimator.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="PlanetMath.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="SceneState.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shader.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="shapes.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="stb_image.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="texture.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="util.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="window.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="shaders\basic.frag">
-      <Filter>Resource Files\shaders</Filter>
+      <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\basic.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\illuminated.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\illuminated.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\load.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\load.vert">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\sky.frag">
-      <Filter>Resource Files\shaders</Filter>
-    </None>
-    <None Include="shaders\sky.vert">
-      <Filter>Resource Files\shaders</Filter>
+      <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\earth.frag">
-      <Filter>Resource Files\shaders</Filter>
+      <Filter>Resource Files</Filter>
     </None>
     <None Include="shaders\earth.vert">
-      <Filter>Resource Files\shaders</Filter>
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\illuminated.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\illuminated.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\load.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\load.vert">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\sky.frag">
+      <Filter>Resource Files</Filter>
+    </None>
+    <None Include="shaders\sky.vert">
+      <Filter>Resource Files</Filter>
     </None>
   </ItemGroup>
 </Project>
