@@ -206,14 +206,6 @@ int main(int argc, char** argv)
 	GLuint electronRocketTexture = loadTexture("resources/electron/electron.png");
 	GLuint satelite1Texture = loadTexture("resources/satelite_1/satelite_1.jpg");
 	GLuint superHeavyRocketTexture = loadTexture("resources/super_heavy/super_heavy.png");
-	//vector<string> files = {
-	//	"resources/skybox/right.jpg",
-	//	"resources/skybox/left.jpg",
-	//	"resources/skybox/bottom.jpg",
-	//	"resources/skybox/top.jpg",
-	//	"resources/skybox/front.jpg",
-	//	"resources/skybox/back.jpg"
-	//};
 	vector<string> files = {
 	"resources/milkyway/right.png",
 	"resources/milkyway/left.png",
