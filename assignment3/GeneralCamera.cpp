@@ -10,14 +10,14 @@ GeneralCamera::GeneralCamera()
 	right = glm::normalize(glm::cross(front, worldUp));
 }
 
-void GeneralCamera::moveCamera(CameraMovement direction)
+void GeneralCamera::moveCamera(CameraMovement direction, float moveSizeRatio)
 {
-	if (direction == CameraMovement::FORWARD) position += calculateHorizontalFront() * movementSpeed;
-	if (direction == CameraMovement::BACKWARD) position -= calculateHorizontalFront() * movementSpeed;
-	if (direction == CameraMovement::LEFT) position -= right * movementSpeed;
-	if (direction == CameraMovement::RIGHT) position += right * movementSpeed;
-	if (direction == CameraMovement::UPWARD) position += worldUp * movementSpeed;
-	if (direction == CameraMovement::DOWNWARD) position -= worldUp * movementSpeed;
+	if (direction == CameraMovement::FORWARD) position += calculateHorizontalFront() * movementSpeed * moveSizeRatio;
+	if (direction == CameraMovement::BACKWARD) position -= calculateHorizontalFront() * movementSpeed * moveSizeRatio;
+	if (direction == CameraMovement::LEFT) position -= right * movementSpeed * moveSizeRatio;
+	if (direction == CameraMovement::RIGHT) position += right * movementSpeed * moveSizeRatio;
+	if (direction == CameraMovement::UPWARD) position += worldUp * movementSpeed * moveSizeRatio;
+	if (direction == CameraMovement::DOWNWARD) position -= worldUp * movementSpeed * moveSizeRatio;
 }
 
 void GeneralCamera::orientCamera(float xoffset, float yoffset)
@@ -42,7 +42,7 @@ void GeneralCamera::moveAndOrientCamera(glm::vec3 target, float xoffset, float y
 {
 
 	if (modelViewDistance < 1.f) modelViewDistance = 1.f;
-	else if (modelViewDistance > 20000.f) modelViewDistance = 20000.f;
+	else if (modelViewDistance > 99999.f) modelViewDistance = 99999.f;
 
 	yaw -= xoffset * modelViewSpeed;
 	pitch -= yoffset * modelViewSpeed;

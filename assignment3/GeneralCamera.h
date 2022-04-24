@@ -20,7 +20,7 @@ public:
 	GeneralCamera();
 
 	// fly through camera
-	void moveCamera(CameraMovement direction);
+	void moveCamera(CameraMovement direction, float moveSizeRatio);
 	void orientCamera(float xoffset, float yoffset);
 
 	// model view camera
@@ -52,9 +52,9 @@ private:
 	float yaw = -90.f;
 	float pitch = 0.f;
 
-	float movementSpeed = 100.f;
+	float movementSpeed = 25.f;
 	float mouseSensitivity = .05f;
-	float modelViewSpeed = 1.3;
+	float modelViewSpeed = 0.2f;
 	float FOV = 70.f;
 	float modelViewDistance = 4000.f;
 
