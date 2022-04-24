@@ -68,7 +68,7 @@ float prevMouseY;
 int sunIdx = 0;		// THIS MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
 int earthIdx = 4;   // THIS MUST BE CHANGED WHENEVER THE CONFIGURATION MATRIX IS CHANGED
 
-float earthOrbitDelay = 600;
+float earthOrbitDelay = 3600;
 glm::vec3 lightPos = glm::vec3(0.0f, 0.0f, 0.0f);
 PlanetMath m;
 vector<RenderedBody> renderedBodies;
@@ -623,7 +623,7 @@ int main(int argc, char** argv)
 				}
 
 				// animate orbit of current object with a origin of parent's position
-				animators[animatorIdx].animate(ms_time, 5, 5, sceneState.getJustStarted());
+				animators[animatorIdx].animate(ms_time, 7, 7, sceneState.getJustStarted());
 
 				// retrieve position
 				renderedBodies[i].position = animators[animatorIdx].getOrbitPosition();
@@ -839,12 +839,12 @@ void processKeyboard(GLFWwindow* window)
 		}
 		if (glfwGetKey(window, GLFW_KEY_Z) == GLFW_PRESS)
 		{
-			float stepSize = powf(10, log10f(camera.getModelViewDistance()) - 1) * 0.05;
+			float stepSize = powf(10, log10f(camera.getModelViewDistance()) - 1) * 0.4;
 			camera.increaseModelViewDistance(stepSize);
 		}
 		if (glfwGetKey(window, GLFW_KEY_C) == GLFW_PRESS)
 		{
-			float stepSize = powf(10, log10f(camera.getModelViewDistance()) - 1) * 0.05;
+			float stepSize = powf(10, log10f(camera.getModelViewDistance()) - 1) * 0.4;
 			camera.decreaseModelViewDistance(stepSize);
 		}
 		camera.moveAndOrientCamera(

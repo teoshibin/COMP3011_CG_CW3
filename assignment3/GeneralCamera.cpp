@@ -42,7 +42,7 @@ void GeneralCamera::moveAndOrientCamera(glm::vec3 target, float xoffset, float y
 {
 
 	if (modelViewDistance < 1.f) modelViewDistance = 1.f;
-	else if (modelViewDistance > 99999.f) modelViewDistance = 99999.f;
+	else if (modelViewDistance > 20000.f) modelViewDistance = 20000.f;
 
 	yaw -= xoffset * modelViewSpeed;
 	pitch -= yoffset * modelViewSpeed;
