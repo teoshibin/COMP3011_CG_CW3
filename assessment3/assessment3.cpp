@@ -206,13 +206,21 @@ int main(int argc, char** argv)
 	GLuint electronRocketTexture = loadTexture("resources/electron/electron.png");
 	GLuint satelite1Texture = loadTexture("resources/satelite_1/satelite_1.jpg");
 	GLuint superHeavyRocketTexture = loadTexture("resources/super_heavy/super_heavy.png");
+	//vector<string> files = {
+	//	"resources/skybox/right.jpg",
+	//	"resources/skybox/left.jpg",
+	//	"resources/skybox/bottom.jpg",
+	//	"resources/skybox/top.jpg",
+	//	"resources/skybox/front.jpg",
+	//	"resources/skybox/back.jpg"
+	//};
 	vector<string> files = {
-		"resources/skybox/right.jpg",
-		"resources/skybox/left.jpg",
-		"resources/skybox/bottom.jpg",
-		"resources/skybox/top.jpg",
-		"resources/skybox/front.jpg",
-		"resources/skybox/back.jpg"
+	"resources/milkyway/right.png",
+	"resources/milkyway/left.png",
+	"resources/milkyway/bottom.png",
+	"resources/milkyway/top.png",
+	"resources/milkyway/front.png",
+	"resources/milkyway/back.png"
 	};
 	GLuint skyTexture = loadCubemap(files);
 	cout << "Textures Loaded\n\n";
@@ -615,7 +623,7 @@ int main(int argc, char** argv)
 		// input
 		processKeyboard(window);
 
-		// fps 
+		// cap fps 
 		if (!frameTrigger.toggle(glfwGetTime()))
 		{
 			continue;
@@ -755,7 +763,7 @@ int main(int argc, char** argv)
 				if (i == earthIdx)
 				{
 					glSetLightingConfig(earthShaderProgram, lightPos, camera, fTrigger.getValue());
-					glUniform1f(glGetUniformLocation(earthShaderProgram, "light[0].ambientStrength"), 0.1f);
+					glUniform1f(glGetUniformLocation(earthShaderProgram, "light[0].ambientStrength"), 0.06f);
 					glSetModelViewProjection(earthShaderProgram, model, view, projection);
 					glBindVertexArray(VAOs[rb.VAOIdx]);
 					glActiveTexture(GL_TEXTURE0);
@@ -1016,7 +1024,15 @@ unsigned int loadCubemap(vector<string> faces)
 		unsigned char* data = stbi_load(faces[i].c_str(), &width, &height, &nrChannels, 0);
 		if (data)
 		{
-			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, data);
+			GLenum format;
+			if (nrChannels == 1)
+				format = GL_RED;
+			else if (nrChannels == 3)
+				format = GL_RGB;
+			else if (nrChannels == 4)
+				format = GL_RGBA;
+
+			glTexImage2D(GL_TEXTURE_CUBE_MAP_POSITIVE_X + i, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data);
 			stbi_image_free(data);
 		}
 		else
@@ -1169,7 +1185,7 @@ void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, General
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light[0].position"), 1, &lightPos[0]);
 	glUniform3f(glGetUniformLocation(shaderProgram, "light[0].color"), 1.f, 1.f, 1.f);
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light[0].camPos"), 1, &cam.getPosition()[0]);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].ambientStrength"), 0.2f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].ambientStrength"), 0.15f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].specularStrength"), 0.3f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].shininess"), 16.f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].constant"), 1.0f);
