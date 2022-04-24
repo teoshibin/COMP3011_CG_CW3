@@ -282,7 +282,7 @@ int main(int argc, char** argv)
 
 	// configure global opengl state
 	glEnable(GL_DEPTH_TEST);
-
+	glEnable(GL_MULTISAMPLE);
 
 	// =========== MODEL & ANIMATION CONFIG ==============
 

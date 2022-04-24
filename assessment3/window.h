@@ -22,6 +22,9 @@ GLFWwindow* myCreateWindow(int w, int h, const char* title)
 	// disable resize
 	glfwWindowHint(GLFW_RESIZABLE, GLFW_FALSE);
 
+    // use multisample buffer for MSAA
+    glfwWindowHint(GLFW_SAMPLES, 4);
+
 	// create window
 	GLFWwindow* window = glfwCreateWindow(w, h, title, NULL, NULL);
 	
