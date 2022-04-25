@@ -186,9 +186,9 @@ int main(int argc, char** argv)
 	GLuint sunTexture = loadTexture("resources/solar_system/textures/2k_sun.jpg");
 	GLuint mercuryTexture = loadTexture("resources/solar_system/textures/2k_mercury.jpg");
 	GLuint venusTexture = loadTexture("resources/solar_system/textures/2k_venus_surface.jpg");
-	GLuint venusAtmosphereTexture = loadTexture("resources/solar_system/textures/2k_venus_atmosphere.jpg");
+	//GLuint venusAtmosphereTexture = loadTexture("resources/solar_system/textures/2k_venus_atmosphere.jpg");
 	GLuint earthTexture = loadTexture("resources/solar_system/textures/2k_earth_daymap.jpg");
-	GLuint earthNightTexture = loadTexture("resources/solar_system/textures/2k_earth_nightmap.jpg");
+	GLuint earthNightTexture = loadTexture("resources/solar_system/textures/8k_earth_nightmap.jpg");
 	GLuint earthCloudsTexture = loadTexture("resources/solar_system/textures/2k_earth_clouds.jpg");
 	GLuint moonTexture = loadTexture("resources/solar_system/textures/2k_moon.jpg");
 	GLuint marsTexture = loadTexture("resources/solar_system/textures/2k_mars.jpg");
@@ -207,12 +207,12 @@ int main(int argc, char** argv)
 	GLuint satelite1Texture = loadTexture("resources/satelite_1/satelite_1.jpg");
 	GLuint superHeavyRocketTexture = loadTexture("resources/super_heavy/super_heavy.png");
 	vector<string> files = {
-	"resources/milkyway/right.png",
-	"resources/milkyway/left.png",
-	"resources/milkyway/bottom.png",
-	"resources/milkyway/top.png",
-	"resources/milkyway/front.png",
-	"resources/milkyway/back.png"
+		"resources/milkyway/right.png",
+		"resources/milkyway/left.png",
+		"resources/milkyway/bottom.png",
+		"resources/milkyway/top.png",
+		"resources/milkyway/front.png",
+		"resources/milkyway/back.png"
 	};
 	GLuint skyTexture = loadCubemap(files);
 	cout << "Textures Loaded\n\n";
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
 	vector<vector<GLuint>> textures{
 		{ sunTexture },
 		{ mercuryTexture },
-		{ venusTexture, venusAtmosphereTexture },
+		{ venusTexture },
 		{ earthTexture, earthCloudsTexture, earthNightTexture},
 		{ marsTexture },
 		{ jupiterTexture },
@@ -992,6 +992,7 @@ unsigned int loadTexture(const char* path)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
 		stbi_image_free(data);
+		std::cout << "Texture Loaded: " << path << std::endl;
 	}
 	else
 	{
