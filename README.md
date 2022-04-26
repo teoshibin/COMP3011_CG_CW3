@@ -10,6 +10,9 @@
 
 A simple animated solar system scene with various miscellaneous interactions to play with. [More Screenshots](./screenshot/)
 
+# Installation
+- Install Executable [here](https://github.com/teoshibin/COMP3011_CG_CW3/releases/latest)
+
 # Controls
 | **Key**    | **Action**                                             |
 |------------|--------------------------------------------------------|
