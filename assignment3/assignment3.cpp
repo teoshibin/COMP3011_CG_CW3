@@ -186,9 +186,9 @@ int main(int argc, char** argv)
 	GLuint sunTexture = loadTexture("resources/solar_system/textures/2k_sun.jpg");
 	GLuint mercuryTexture = loadTexture("resources/solar_system/textures/2k_mercury.jpg");
 	GLuint venusTexture = loadTexture("resources/solar_system/textures/2k_venus_surface.jpg");
-	GLuint venusAtmosphereTexture = loadTexture("resources/solar_system/textures/2k_venus_atmosphere.jpg");
+	//GLuint venusAtmosphereTexture = loadTexture("resources/solar_system/textures/2k_venus_atmosphere.jpg");
 	GLuint earthTexture = loadTexture("resources/solar_system/textures/2k_earth_daymap.jpg");
-	GLuint earthNightTexture = loadTexture("resources/solar_system/textures/2k_earth_nightmap.jpg");
+	GLuint earthNightTexture = loadTexture("resources/solar_system/textures/8k_earth_nightmap.jpg");
 	GLuint earthCloudsTexture = loadTexture("resources/solar_system/textures/2k_earth_clouds.jpg");
 	GLuint moonTexture = loadTexture("resources/solar_system/textures/2k_moon.jpg");
 	GLuint marsTexture = loadTexture("resources/solar_system/textures/2k_mars.jpg");
@@ -207,12 +207,12 @@ int main(int argc, char** argv)
 	GLuint satelite1Texture = loadTexture("resources/satelite_1/satelite_1.jpg");
 	GLuint superHeavyRocketTexture = loadTexture("resources/super_heavy/super_heavy.png");
 	vector<string> files = {
-	"resources/milkyway/right.png",
-	"resources/milkyway/left.png",
-	"resources/milkyway/bottom.png",
-	"resources/milkyway/top.png",
-	"resources/milkyway/front.png",
-	"resources/milkyway/back.png"
+		"resources/milkyway/right.png",
+		"resources/milkyway/left.png",
+		"resources/milkyway/bottom.png",
+		"resources/milkyway/top.png",
+		"resources/milkyway/front.png",
+		"resources/milkyway/back.png"
 	};
 	GLuint skyTexture = loadCubemap(files);
 	cout << "Textures Loaded\n\n";
@@ -220,7 +220,7 @@ int main(int argc, char** argv)
 	vector<vector<GLuint>> textures{
 		{ sunTexture },
 		{ mercuryTexture },
-		{ venusTexture, venusAtmosphereTexture },
+		{ venusTexture },
 		{ earthTexture, earthCloudsTexture, earthNightTexture},
 		{ marsTexture },
 		{ jupiterTexture },
@@ -755,7 +755,7 @@ int main(int argc, char** argv)
 				if (i == earthIdx)
 				{
 					glSetLightingConfig(earthShaderProgram, lightPos, camera, fTrigger.getValue());
-					glUniform1f(glGetUniformLocation(earthShaderProgram, "light[0].ambientStrength"), 0.12f);
+					glUniform1f(glGetUniformLocation(earthShaderProgram, "light[0].ambientStrength"), 0.06f);
 					glSetModelViewProjection(earthShaderProgram, model, view, projection);
 					glBindVertexArray(VAOs[rb.VAOIdx]);
 					glActiveTexture(GL_TEXTURE0);
@@ -992,6 +992,7 @@ unsigned int loadTexture(const char* path)
 		glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
 
 		stbi_image_free(data);
+		std::cout << "Texture Loaded: " << path << std::endl;
 	}
 	else
 	{
@@ -1177,7 +1178,7 @@ void glSetLightingConfig(unsigned int shaderProgram, glm::vec3 lightPos, General
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light[0].position"), 1, &lightPos[0]);
 	glUniform3f(glGetUniformLocation(shaderProgram, "light[0].color"), 1.f, 1.f, 1.f);
 	glUniform3fv(glGetUniformLocation(shaderProgram, "light[0].camPos"), 1, &cam.getPosition()[0]);
-	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].ambientStrength"), 0.2f);
+	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].ambientStrength"), 0.15f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].specularStrength"), 0.3f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].shininess"), 16.f);
 	glUniform1f(glGetUniformLocation(shaderProgram, "light[0].constant"), 1.0f);
