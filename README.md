@@ -13,6 +13,7 @@ A simple animated solar system scene with various miscellaneous interactions to 
 # Controls
 | **Key**    | **Action**                                             |
 |------------|--------------------------------------------------------|
+| Esc        | Close Window                                           |
 | Mouse      | Fly Through Camera View Direction                      |
 | W          | Fly Forward / Model View Pitch Down                    |
 | A          | Fly Left / Model View Yaw Left                         |
