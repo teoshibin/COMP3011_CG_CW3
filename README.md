@@ -1,5 +1,6 @@
 
 # Solar System Scene with OpenGL
+[Demo video here](https://youtu.be/eGatB6WxnLI)
 <p align="center" float="left">
     <img src="screenshot/earth_1.jpg" width="100%"/>
 </p>
